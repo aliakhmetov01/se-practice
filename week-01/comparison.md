@@ -8,18 +8,18 @@
 
 ## 1. Facts
 
-| | Manual (Part 1) | Rocket (Part 2) |
-| --- | --- | --- |
-| Language / stack used | | |
-| Time to first version that ran | | |
-| Time to all 4 test cases passing | | |
-| Number of attempts / prompts needed | | |
-| Lines of code you actually wrote | | |
-| Did it handle invalid marks (case B)? | | |
-| Did it handle an empty list (case D)? | | |
-| Did it use the ≥ 50 pass threshold? | | |
-| Output format matches the spec? | | |
-| Can you explain every line of it? | | |
+| | Manual (Part 1) | Rocket (Part 2)          |
+| --- |----------------|--------------------------|
+| Language / stack used | java           | Next.js + TypeScript     |
+| Time to first version that ran | 60+-           | 10+-                     |
+| Time to all 4 test cases passing | 90+-           | not all passed correctly |
+| Number of attempts / prompts needed | some + fixes   | 2                        |
+| Lines of code you actually wrote | 84             | 0                        |
+| Did it handle invalid marks (case B)? | yes            | after fix yes            |
+| Did it handle an empty list (case D)? | yes            | nope                     |
+| Did it use the ≥ 50 pass threshold? | yes            | yes                      |
+| Output format matches the spec? | yes            | sometimes no             |
+| Can you explain every line of it? | maybe          | no                       |
 
 ## 2. Test results
 
@@ -33,25 +33,24 @@
 ## 3. What the AI added that I never asked for
 
 <!-- Tech stack, UI, extra features, a pass threshold it invented, styling, etc. -->
-
--
--
-
+- A web interface using Next.js and TypeScript
+- A grade distribution chart
+- A sortable entries table
 ## 4. What the AI got wrong or silently skipped
 
 <!-- Be concrete: input, expected, actual. -->
 
--
--
+- It did not initially parse comma-separated marks correctly
+- no valid marks case did not work correctly
 
 ## 5. The defect I asked Rocket to fix
 
-**Prompt I used:**
+**Prompt I used:** Fix the app so that comma-separated student marks are parsed correctly, including invalid values such as text, empty values, numbers below 0, and numbers above 100.
 
-**Result:** (fixed / partly fixed / broke something else)
+**Result:** partly fixed
 
 **What this tells me:**
-
+prompt fixed the main parsing defect, but the output still did not like we expected
 ---
 
 ## 6. Reflection (200–300 words)
