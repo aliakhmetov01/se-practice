@@ -39,26 +39,28 @@ n/a — used Python
 **Prompt sent** (should be exactly one sentence):
 
 ```
-
+Write Python code to analyze student marks.
 ```
 
 **Assumptions the AI made that I never gave it** — list them, one per line. A data format, a pass
 threshold, a rounding rule, an input method, an invented feature all count.
 
-1.
-2.
-3.
+1. The AI assumed the input should be a dictionary mapping student names to scores.
+2. The AI assumed the passing threshold should be 60 instead of 50.
+3. The AI assumed the program should calculate median, letter grades, grade distribution, top performers, and bottom performers.
+4. The AI assumed results should be printed to the terminal instead of returned as a dictionary.
+5. The AI assumed student names and example data should be included.
 
 **Questions it should have asked and did not:**
 
-1.
-2.
+1. What exact function name, parameters, and return format are required?
+2. How should invalid input be handled, and what pass mark should be used by default?
 
 **Is the function named `analyze_marks` with the required signature?** yes / no — if no, what is it
-called:
+called: No — it is called analyze_grades(records, pass_threshold=60.0).
 
 **First impression before testing** (one sentence — you will compare this with section 6 later):
-
+The code looks complete, but it probably will not match the required interface because it uses a different function name, input format, and default pass mark.
 ---
 
 ## 3. Prompt B — structured context
