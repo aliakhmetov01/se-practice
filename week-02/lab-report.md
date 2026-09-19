@@ -68,18 +68,21 @@ The code looks complete, but it probably will not match the required interface b
 **Prompt sent** (paste it in full, including any substitutions):
 
 ```
-
+You are a Python developer. Implement analyze_marks(marks, pass_mark=50). Return
+average, highest, lowest, and pass_rate in a dictionary. Accept marks from 0 to 100;
+raise ValueError for an empty list, non-numeric values, or out-of-range values. Use
+no external libraries. Return code plus a short explanation.
 ```
 
 **What B fixed compared to A:**
 
-1.
-2.
+1. It specified the exact function name and signature: analyze_marks(marks, pass_mark=50).
+2. It specified the required return keys, validation rules, ValueError behavior, and no external libraries.
 
 **What B still leaves open:**
 
-1.
-2.
+1. It does not say whether average and pass_rate must be rounded, or to how many decimal places.
+2. It does not explicitly state whether a mark equal to pass_mark counts as passing.
 
 ---
 
@@ -88,25 +91,34 @@ The code looks complete, but it probably will not match the required interface b
 **What I appended to Prompt B:**
 
 ```
-
+Example: analyze_marks([40, 60, 80], 50) → average 60, highest 80, lowest 40,
+pass_rate 66.67. Include tests for: one mark, decimals, custom pass_mark, empty list,
+text value, and marks below 0 or above 100. State any remaining assumptions before
+the code.
 ```
 
 **Tests the AI wrote for itself** — how many, and which situations do they cover?
 
 | Situation | Covered by the AI's tests? |
-| --- | --- |
-| one mark | |
-| decimals | |
-| custom pass_mark | |
-| empty list | |
-| text value | |
-| below 0 / above 100 | |
+| --- |----------------------------|
+| one mark | yes                        |
+| decimals | yes                        |
+| custom pass_mark | yes                        |
+| empty list | yes                        |
+| text value | yes                        |
+| below 0 / above 100 | yes                        |
 
-**Do the AI's own tests pass against the AI's own code?** yes / no
+**Do the AI's own tests pass against the AI's own code?** no
 
 **Do they agree with the harness in section 6?** yes / no — if no, where do they disagree:
 
-**Assumptions C stated explicitly before the code:**
+**Assumptions C stated explicitly before the code:** 
+
+1. marks must be an iterable containing numeric values.
+2. Boolean values are rejected as non-numeric.
+3. average and pass_rate are rounded to two decimal places.
+4. highest and lowest preserve their exact numeric values.
+5. pass_mark must be numeric and between 0 and 100.
 
 ---
 
@@ -115,17 +127,40 @@ The code looks complete, but it probably will not match the required interface b
 **The complete prompt I wrote** (one message, sent to a fresh chat):
 
 ```
+You are a Python developer. Implement analyze_marks(marks, pass_mark=50).
 
+Requirements:
+- Return one dictionary with exactly these keys: average, highest, lowest, pass_rate.
+- marks must contain only numeric values from 0 to 100.
+- Raise ValueError for an empty list, any non-numeric value, or any value outside 0 to 100.
+- A mark passes when mark >= pass_mark.
+- average and pass_rate must be rounded to two decimal places.
+- highest and lowest must preserve their original numeric values.
+- Use no external libraries.
+
+Example:
+analyze_marks([40, 60, 80], 50) ->
+{"average": 60.0, "highest": 80, "lowest": 40, "pass_rate": 66.67}
+
+Include tests for:
+- one mark
+- decimal marks
+- custom pass_mark
+- empty list
+- text value
+- marks below 0 or above 100
+
+State any assumptions before the code. Return the implementation and tests only, with no unrelated features.
 ```
 
 **What I deliberately added that A, B and C did not have:**
 
-1.
-2.
-3.
+1. I explicitly stated that a mark passes when mark >= pass_mark.
+2. I explicitly required average and pass_rate to be rounded to two decimal places.
+3. I required exactly the four keys average, highest, lowest, pass_rate and no unrelated features.
 
 **The ambiguity I found in the specification, and how I resolved it inside Prompt D:**
-
+The specification was ambiguous about rounding. I resolved it by requiring average and pass_rate to be rounded to two decimal places.
 ---
 
 ## 6. Test results — the evidence
