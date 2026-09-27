@@ -347,7 +347,7 @@ Shape is fine. This says nothing about whether the work is good.
 | `check_requirements.py` | 23   | 0    | 0     |
 | `validate_submission.py` | 21 | 0 | 0 |
 
-Commit these numbers were produced at (`git rev-parse --short HEAD`): d229a1e
+Commit these numbers were produced at (`git rev-parse --short HEAD`): 'b4fdbc2'
 
 **Every FAIL, one line each: what it is and what you decided to do about it.** A FAIL you report and
 explain costs you nothing.
@@ -366,6 +366,12 @@ Answer all three:
 2. What did the assistant get right that would have taken you noticeably longer by hand?
 3. You are handing these requirements to someone who will implement them, and you will not be in the
    room. Which single one would you rewrite first, and why?
+
+The most problematic part of the generated requirements was the extra detail invented by the AI. For example, it introduced authentication, API requests, HTTP errors, maintenance status, audit logs, browser sessions, and other details that were not part of the supplied Smart Campus scenario. I caught these problems by comparing every generated story and acceptance criterion with the fixed business rules and the explicit out-of-scope list. I also found that US-07 was not really a separate user goal but a boundary decision for R3.
+
+The assistant was useful for quickly producing a complete first draft of user stories, acceptance criteria, and PlantUML. Creating the Given/When/Then structure and the initial diagram manually would have taken me noticeably longer.
+
+If I handed these requirements to a developer, I would rewrite US-02 first because booking is the central function and it depends on all four business rules. Its acceptance criteria must clearly define future time, the two-hour maximum, overlap behavior, and blocked rooms. Ambiguity there could cause several incorrect implementation decisions.
 
 Be specific. "The AI was useful" is worth nothing; "UC-06 had no story behind it until I wrote
 US-07, and the checker is what told me" is worth everything.
