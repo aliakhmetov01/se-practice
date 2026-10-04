@@ -231,3 +231,8 @@ reached the code if nobody had reviewed it? What did the critique find that you 
 did it claim that was false? Be specific: "the AI got the multiplicities wrong" is worth nothing;
 "the AI put 1..* on the Booking end, which says every room must already have a booking" is worth
 everything.>
+The AI made the most mistakes in the class and sequence diagrams. In the class diagram, Gemini added an Administrator–Room association with multiplicities that were not supported by the requirements. It also used composition between Booking and Confirmation, although this lifecycle relationship was not required. If these mistakes reached the code, the system could incorrectly assume that each room belongs to one administrator and could create unnecessary dependencies between domain objects.
+
+In the sequence diagram, the AI used square brackets in alt guards and introduced a separate Confirmation object. I changed the sequence so that R1, R2 and R3 are checked before creating or saving a booking, and confirmation is returned only after success.
+
+The critique helped me notice inconsistent names such as requestBooking and bookRoom, and duplicate US-05 use-case IDs. I accepted these findings. I rejected the suggestion to add service and repository classes to the class diagram because the task requires a domain class diagram only.
