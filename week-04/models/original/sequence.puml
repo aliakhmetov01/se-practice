@@ -1,0 +1,61 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam shadowing false
+
+actor "Student" as student
+participant ":BookingService" as service
+participant ":RoomRepository" as roomRepo
+participant ":BookingRepository" as bookingRepo
+participant "newBooking:Booking" as booking
+participant "confirmation:Confirmation" as confirmation
+
+student -> service : bookRoom(studentId, roomId, startTime, endTime)
+activate service
+
+note over service
+  **Rule R1 Validation (in-memory):**
+  - startTime > currentTime
+  - 0 < duration <= 2 hours
+end note
+
+alt [invalid R1: startTime in past OR duration <= 0 OR duration > 2h]
+  service --> student : return Error("Invalid booking duration or start time")
+else [valid R1]
+  ' Fetch room to verify existence and blocked status (R3)
+  service -> roomRepo : findById(roomId)
+  activate roomRepo
+  roomRepo --> service : room
+  deactivate roomRepo
+
+  ' Fetch active bookings to verify non-overlap (R2)
+  service -> bookingRepo : findActiveBookings(roomId, startTime, endTime)
+  activate bookingRepo
+  bookingRepo --> service : conflictingBookings
+  deactivate bookingRepo
+
+  alt [R3 violated (room.isBlocked == true) OR R2 violated (conflictingBookings is not empty)]
+    ' Room is unavailable alternative path
+    service --> student : return Failure("Room unavailable: room is blocked or slot already booked")
+  else [Room is available (R1, R2, R3 satisfied)]
+    ' Successful reservation path
+    create booking
+    service -> booking : new(studentId, roomId, startTime, endTime, ACTIVE)
+
+    service -> bookingRepo : save(newBooking)
+    activate bookingRepo
+    bookingRepo --> service : savedBooking
+    deactivate bookingRepo
+
+    ' Rule R4: Produce confirmation
+    create confirmation
+    service -> confirmation : new(confirmationCode, savedBooking.id, now())
+
+    service --> student : return Confirmation(confirmationCode, roomId, startTime, endTime)
+  end
+end
+
+deactivate service
+@enduml

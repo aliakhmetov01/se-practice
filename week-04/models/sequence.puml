@@ -1,0 +1,52 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam shadowing false
+
+actor "Student" as student
+participant ":BookingService" as service
+participant ":RoomRepository" as roomRepo
+participant ":BookingRepository" as bookingRepo
+participant "newBooking:Booking" as booking
+
+student -> service : bookRoom(studentId, roomId, startTime, endTime)
+activate service
+
+service -> service : validateTimeRange(startTime, endTime) (R1)
+service --> service : timeRangeValid
+
+service -> roomRepo : findById(roomId)
+activate roomRepo
+roomRepo --> service : room
+deactivate roomRepo
+
+service -> service : checkBlocked(room) (R3)
+service --> service : roomBlocked
+
+service -> bookingRepo : findActiveBookings(roomId, startTime, endTime)
+activate bookingRepo
+bookingRepo --> service : conflictingBookings
+deactivate bookingRepo
+
+service -> service : checkOverlap(conflictingBookings) (R2)
+service --> service : overlapExists
+
+alt invalid time OR room blocked OR overlap exists
+  service --> student : booking rejected / room unavailable
+else R1, R2 and R3 satisfied
+  create booking
+  service -> booking : new(studentId, roomId, startTime, endTime, ACTIVE)
+
+  service -> bookingRepo : save(newBooking)
+  activate bookingRepo
+  bookingRepo --> service : savedBooking
+  deactivate bookingRepo
+
+  service -> service : createConfirmation(savedBooking) (R4)
+  service --> student : booking confirmation
+end
+
+deactivate service
+@enduml
