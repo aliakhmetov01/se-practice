@@ -182,13 +182,36 @@ cause column says why no change was needed.
 **The assistant's critique, pasted unedited:**
 
 ```text
-(paste here)
+1. **Boolean coercion for `blocked` check**
+* **Quoted Line:** `if blocked:`
+* **Contract / Criterion:** Contract line: `blocked is a Boolean.` and AC3: `The room is not blocked.`
+* **Issue:** Using truthiness (`if blocked:`) rather than verifying a strict Boolean or boolean value could inadvertently treat non-boolean truthy values as blocked if callers pass other types, though per contract `blocked` is guaranteed to be a Boolean. Under the strict contract, this is sound.
+
+
+2. **Iterator consumption mutating input state**
+* **Quoted Line:** `for ex_start, ex_end in existing:`
+* **Contract / Criterion:** Contract line: `Keep all inputs unchanged.` and AC5: `never alter existing.`
+* **Issue:** If `existing` is passed as a single-use iterator or generator (rather than a reusable collection like a `list` or `set`), iterating through it exhausts the generator, thereby mutating the caller's input state.
+
+
+3. **Implicit type assumptions for start and end**
+* **Quoted Line:** `if not (0 <= start < end <= 1440 and start > now):`
+* **Contract / Criterion:** Contract line: `Times are integer minutes after midnight on one date.` and AC1: `0 <= start < end <= 1440, and start > now.`
+* **Issue:** In Python, passing floating-point numbers (e.g., `start = 600.5`, `end = 660.5`) will pass numeric comparisons and return `True` despite the contract requiring times to be integers.
+
+
+4. **Handling of Boolean `start` or `end` values**
+* **Quoted Line:** `if not (0 <= start < end <= 1440 and start > now):`
+* **Contract / Criterion:** Contract line: `Times are integer minutes after midnight on one date.`
+* **Issue:** In Python, `bool` is a subclass of `int` (`isinstance(True, int) == True`). If `start` or `end` were passed as boolean values (e.g., `start=True` representing `1`), numerical comparisons evaluate them as integers `0` or `1` rather than rejecting invalid non-integer time representations.
 ```
 
 | # | Suggestion | accept / reject | Reason — cite the AC or the contract line | Suite after the change |
 | --- | --- | --- | --- | --- |
-| 1 | | accept / reject | | |
-| 2 | | accept / reject | | |
+| 1 | Check `blocked` as a strict Boolean instead of using `if blocked:`. | reject | The contract explicitly says `blocked is a Boolean`, so non-Boolean values are outside the supplied contract. `if blocked:` correctly implements AC3 for valid inputs. | No change required; 18 tests already pass. |
+| 2 | Iterating over `existing` could consume a generator and alter its state. | reject | For the Python path, `existing` is specified as a list of `(start, end)` tuples. The submitted function only reads the list and does not modify it, satisfying AC5. Supporting generators would add behaviour outside the stated contract. | No change required; AC5 and input-unchanged tests pass. |
+| 3 | Add explicit validation that `start` and `end` are integers. | reject | The contract states that times are integer minutes after midnight. Non-integer times are outside the valid input contract, so extra type validation is not required by AC1-AC5. | No change required; 18 tests already pass. |
+| 4 | Explicitly reject Boolean values for `start` and `end`. | reject | The contract states that times are integer minutes after midnight. It does not require defensive validation for invalid input types such as Boolean times. Adding this would go beyond the stated scope. | No change required; 18 tests already pass. |
 
 ---
 
@@ -196,7 +219,7 @@ cause column says why no change was needed.
 
 | # | What changed (the line, before → after) | Why | Evidence: the test or check that moved |
 | --- | --- | --- | --- |
-| 1 | | | |
+| 1 | No change to `code/booking.py`. Added one AC4 test for overlap with the second existing booking. | v1 already passed F1-F10. The first checker run showed M7 FAIL because my test suite did not catch one faulty AC4 implementation. | After adding `test_overlap_with_second_existing_is_rejected`, M7 changed from FAIL to PASS and all 18 tests passed. |
 
 ---
 
@@ -207,7 +230,29 @@ cause column says why no change was needed.
 Paste the **complete** terminal output. For Python: everything `python -m unittest -v` printed.
 
 ```text
-(paste here)
+test_blocked_room_is_rejected (test_booking.BookingTests.test_blocked_room_is_rejected) ... ok
+test_empty_existing_allows_valid_booking (test_booking.BookingTests.test_empty_existing_allows_valid_booking) ... ok
+test_end_after_1440_is_rejected (test_booking.BookingTests.test_end_after_1440_is_rejected) ... ok
+test_end_of_day_1440_is_allowed (test_booking.BookingTests.test_end_of_day_1440_is_allowed) ... ok
+test_exactly_two_hours_is_allowed (test_booking.BookingTests.test_exactly_two_hours_is_allowed) ... ok
+test_existing_contains_new_booking_is_rejected (test_booking.BookingTests.test_existing_contains_new_booking_is_rejected) ... ok
+test_existing_is_not_modified (test_booking.BookingTests.test_existing_is_not_modified) ... ok
+test_multiple_existing_no_overlap_is_allowed (test_booking.BookingTests.test_multiple_existing_no_overlap_is_allowed) ... ok
+test_new_booking_contains_existing_is_rejected (test_booking.BookingTests.test_new_booking_contains_existing_is_rejected) ... ok
+test_over_two_hours_is_rejected (test_booking.BookingTests.test_over_two_hours_is_rejected) ... ok
+test_overlap_from_left_is_rejected (test_booking.BookingTests.test_overlap_from_left_is_rejected) ... ok
+test_overlap_is_rejected (test_booking.BookingTests.test_overlap_is_rejected) ... ok
+test_overlap_with_second_existing_is_rejected (test_booking.BookingTests.test_overlap_with_second_existing_is_rejected) ... ok
+test_reversed_time_is_rejected (test_booking.BookingTests.test_reversed_time_is_rejected) ... ok
+test_starts_now_is_rejected (test_booking.BookingTests.test_starts_now_is_rejected) ... ok
+test_touching_end_is_allowed (test_booking.BookingTests.test_touching_end_is_allowed) ... ok
+test_touching_start_is_allowed (test_booking.BookingTests.test_touching_start_is_allowed) ... ok
+test_zero_length_is_rejected (test_booking.BookingTests.test_zero_length_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.001s
+
+OK
 ```
 
 ### 8.2 The checker, final run
@@ -216,7 +261,45 @@ Paste the **complete** output of `python tests/check_booking.py`. Paste it **las
 this file afterwards, run the checker again and paste again.
 
 ```text
-(paste here)
+Week 05 - can_book: the function, your tests, the evidence   (Path A)
+
+PASS   F1   the six cases from the task table           6 of 6 cases
+PASS   F2   AC1 time order and day bounds               5 of 5 cases
+PASS   F3   AC1 the start is in the future              5 of 5 cases
+PASS   F4   AC2 at most 120 minutes                     3 of 3 cases
+PASS   F5   AC3 a blocked room accepts nothing          2 of 2 cases
+PASS   F6   AC4 every kind of overlap is rejected       5 of 5 cases
+PASS   F7   AC4 touching endpoints are allowed          3 of 3 cases
+PASS   F8   AC4 every existing booking is checked       4 of 4 cases
+PASS   F9   AC5 the result is a real Boolean            3 of 3 cases
+PASS   F10  AC5 the inputs are left unchanged           2 of 2 cases
+PASS   O1   the assistant's first version is kept       v1 kept (47 lines)
+PASS   S1   your suite has at least 11 tests            18 tests
+PASS   S2   your suite is green on your own code        18 tests, OK
+PASS   M1   your tests catch a fault in AC1             caught by test_starts_now_is_rejected
+PASS   M2   your tests catch a fault in AC1             caught by test_end_after_1440_is_rejected
+PASS   M3   your tests catch a fault in AC1             caught by test_zero_length_is_rejected
+PASS   M4   your tests catch a fault in AC2             caught by test_exactly_two_hours_is_allowed
+PASS   M5   your tests catch a fault in AC3             caught by test_blocked_room_is_rejected
+PASS   M6   your tests catch a fault in AC4             caught by test_touching_end_is_allowed, test_touching_start_is_allowed
+PASS   M7   your tests catch a fault in AC4             caught by test_overlap_with_second_existing_is_rejected
+PASS   M8   your tests catch a fault in AC4             caught by test_new_booking_contains_existing_is_rejected
+PASS   M9   your tests catch a fault in AC5             caught by test_existing_is_not_modified
+PASS   M10  your tests catch a fault in AC5             caught by test_existing_is_not_modified
+PASS   L1   report 1: tool, model and language          tool, model and language recorded
+PASS   L2   report 2: the plan, and what you corrected  plan pasted, 18 row(s) on what you corrected or verified
+PASS   L3   report 3: v1 mapped to AC1-AC4              4 conditions mapped, AC1-AC4 all present
+PASS   L4   report 4: at least 11 of your tests listed  18 tests listed
+PASS   L5   report 5: debugging evidence                1 row(s) of input / expected / actual
+PASS   L6   report 6: the critique, each point judged   critique pasted, 4 points judged
+PASS   L7   report 7: change log                        1 change-log row(s)
+PASS   L8   report 8.1: real output of your suite       suite output pasted
+FAIL   L9   report 10: conclusion of 120-180 words      section 10 has 0 words, the task asks for 120-180
+------------------------------------------------------------------------------
+v1 (code/original/booking_v1.py): passes F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 - fails nothing - identical to your final: no
+SUMMARY pass=31 fail=1 error=0   (32 checks)
+Every FAIL or ERROR you keep goes in lab-report.md section 9 and in submission.yml known_fails.
+One you report and explain costs you nothing. One you hide costs the whole criterion.
 ```
 
 ### 8.3 Path B only — three faults I planted myself
@@ -244,21 +327,21 @@ The same IDs as `known_fails` in `submission.yml`. Write `none` if the run is cl
 
 | Check | Why it stays |
 | --- | --- |
-| | |
+| none | All 32 checks pass. |
 
 ### 9.2 Outside the contract
 
 The contract says times are integers. It does not say what `can_book` does when one is not —
 `600.5`, or the string `"600"`. What does **your** function do, and why is that the right call?
 
--
+-My function does not explicitly handle non-integer times. The contract says that times are integers, so I decided not to add extra validation for values such as `600.5` or `"600"`. In Python, some non-integer numeric values may still pass the comparisons, while incompatible types may raise an error. I consider these inputs outside the stated contract.
 
 ### 9.3 A bound that never decides
 
 One of the bounds written in AC1 can never be the *only* reason a request is rejected. Which one,
 and why?
 
--
+-The bound `0 <= start` can never be the only reason for rejection. `now` is always valid and is at least 0. Therefore, if `start` is below 0, the condition `start > now` also fails. Both conditions fail at the same time, so the lower bound on `start` cannot reject a request by itself.
 
 ---
 
@@ -275,3 +358,8 @@ and why?
      side, so a booking that ends exactly when another begins was rejected." -->
 
 <!-- Write your conclusion below this line -->
+In this task, I learned how to check booking rules with tests instead of trusting the first implementation. The overlap condition uses `start < ex_end` and `end > ex_start`. These strict comparisons are important because bookings that only touch at the endpoints are allowed. For example, one booking may end at 660 and the next one may start at 660 without overlap.
+
+My first version already passed all functional checks, but my test suite missed one fault. The checker showed M7 FAIL because I did not test a case where the new booking overlaps with the second item in `existing`. I added a new test for this case, and after that M7 passed.
+
+The main decision I made myself was which edge cases to add. I included day limits, zero-length and reversed times, multiple existing bookings, unchanged input, touching endpoints, and different overlap situations. This helped me verify the function more completely.
