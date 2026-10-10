@@ -116,21 +116,21 @@ row saying which lines of the plan you checked against which AC.
 
 ## 3. Task 2 — the first version (v1), read before it was run
 
-v1 is saved as `code/original/booking_v1.<ext>`, exactly as the assistant returned it: yes / no
+v1 is saved as `code/original/booking_v1.<ext>`, exactly as the assistant returned it: yes
 
 **AC map.** One row per condition in v1. Quote the line.
 
 | # | Line in v1 | AC it implements | Correct as written? If not, why |
 | --- | --- | --- | --- |
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
+| 1 | `if blocked: return False` | AC3 | Yes. A blocked room must reject the booking. |
+| 2 | `if not (0 <= start < end <= 1440 and start > now): return False` | AC1 | Yes. It checks all bounds and requires the booking to start strictly after now. |
+| 3 | `if (end - start) > 120: return False` | AC2 | Yes. A duration of exactly 120 minutes is allowed, while anything longer is rejected. |
+| 4 | `if start < ex_end and end > ex_start: return False` | AC4, AC5 | Yes. It rejects real overlap while allowing touching endpoints. |
 
 **Anything in v1 that no AC asks for** (extra validation, a buffer between bookings, logging,
 saving the booking, a different return type):
 
--
+- None. The type hints and docstrings do not add any extra booking rules or change the function's behaviour.
 
 ---
 
