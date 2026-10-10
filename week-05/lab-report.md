@@ -29,7 +29,69 @@ grader find your answers by them. Add rows to any table; never remove its header
 **The assistant's plan, pasted unedited:**
 
 ```text
-(paste here)
+### Implementation Plan
+
+To evaluate whether a booking can proceed, check the acceptance criteria using early exit (short-circuiting to return `False` as soon as any check fails) in the following order:
+
+1. **Blocked Room Check (AC3):**
+* If `blocked` is `True`, immediately return `False`.
+
+
+2. **Booking Window & Future Time Check (AC1):**
+* Verify $0 \le \text{start} < \text{end} \le 1440$.
+* Verify $\text{start} > \text{now}$.
+* If either condition fails, return `False`.
+
+
+3. **Maximum Duration Check (AC2):**
+* Verify $(\text{end} - \text{start}) \le 120$.
+* If false, return `False`.
+
+
+4. **No Overlap with Existing Bookings (AC4, AC5):**
+* Iterate through the `existing` collection of `(ex_start, ex_end)` tuples without mutating it.
+* Because intervals are half-open $[ \text{start}, \text{end} )$, two intervals overlap if and only if:
+
+$$\max(\text{start}, \text{ex\_start}) < \min(\text{end}, \text{ex\_end})$$
+
+
+
+Equivalently: $\text{start} < \text{ex\_end} \text{ and } \text{end} > \text{ex\_start}$.
+* Touching at borders (e.g., $\text{end} == \text{ex\_start}$ or $\text{start} == \text{ex\_end}$) yields strict equality, not strict inequality, which is permitted.
+* If an overlap is detected with any existing booking, return `False`.
+
+
+5. **Success (AC5):**
+* If all checks pass, return `True`.
+
+
+
+---
+
+### Assumptions
+
+* **Input Integrity:** Per the contract, `now` is an integer in $[0, 1439]$, `blocked` is a `bool`, and `existing` is an iterable of valid $(start, end)$ integer tuples representing active bookings on the same calendar day.
+* **Input Types for `start` and `end`:** While `start` and `end` represent minute offsets, validation must account for potential invalid bounds, non-positive durations ($\text{start} \ge \text{end}$), or out-of-range times.
+* **Endpoint Touching:** Because intervals are half-open $[ \text{start}, \text{end} )$, a new booking ending exactly when an existing one starts (or starting exactly when an existing one ends) does not constitute an overlap.
+* **Immutability:** The function will only read from `existing` (e.g., no sorting in-place via `.sort()`).
+
+---
+
+### Boundary Cases
+
+| Category | Test Scenario | Inputs (`start`, `end`, `now`, `blocked`, `existing`) | Expected | Exposes |
+| --- | --- | --- | --- | --- |
+| **Strictly Future (`now`)** | Booking starts exactly at `now` | `start=600, end=660, now=600, blocked=False, existing=[]` | `False` | Using `>=` instead of `>` for `start > now` |
+| **Strictly Future (`now`)** | Booking starts 1 minute after `now` | `start=601, end=661, now=600, blocked=False, existing=[]` | `True` | Correct boundary evaluation for future times |
+| **Midnight Limits** | Booking reaches end of day (1440) | `start=1380, end=1440, now=1300, blocked=False, existing=[]` | `True` | Off-by-one errors on upper boundary ($1440$) |
+| **Midnight Limits** | Booking exceeds 1440 | `start=1380, end=1441, now=1300, blocked=False, existing=[]` | `False` | Missing upper bound ceiling |
+| **Duration Limit** | Duration is exactly 120 minutes | `start=100, end=220, now=50, blocked=False, existing=[]` | `True` | Using `< 120` instead of `<= 120` |
+| **Duration Limit** | Duration is 121 minutes | `start=100, end=221, now=50, blocked=False, existing=[]` | `False` | Off-by-one check on max duration |
+| **Zero/Negative Length** | `start == end` | `start=300, end=300, now=100, blocked=False, existing=[]` | `False` | Allowing zero-length bookings ($\le$ vs $<$) |
+| **Endpoint Touching (Left)** | Booking ends exactly when existing starts | `start=500, end=600, now=100, blocked=False, existing=[(600, 700)]` | `True` | Mistaking abutting endpoints for collisions |
+| **Endpoint Touching (Right)** | Booking starts exactly when existing ends | `start=700, end=800, now=100, blocked=False, existing=[(600, 700)]` | `True` | Mistaking abutting endpoints for collisions |
+| **Minimal Overlap** | Overlaps by exactly 1 minute | `start=500, end=601, now=100, blocked=False, existing=[(600, 700)]` | `False` | Loose collision detection |
+| **Enclosure** | Existing booking is fully inside request | `start=500, end=700, now=100, blocked=False, existing=[(550, 650)]` | `False` | Overlap logic only checking endpoints |
 ```
 
 **What the plan invented or changed.** One row for every rule in the plan that is not in the
@@ -38,7 +100,13 @@ row saying which lines of the plan you checked against which AC.
 
 | # | What the plan said | What the contract or the AC says | What I did |
 | --- | --- | --- | --- |
-| 1 | | | |
+| 1 | Check `blocked` first and return False if it is True. | AC3 says the room must not be blocked. The specification does not require a specific check order. | Accepted. Checking it first does not change the required behaviour. |
+| 2 | Check `0 <= start < end <= 1440` and `start > now`. | AC1 states exactly these conditions. | Accepted with no changes. |
+| 3 | Check that `end - start <= 120`. | AC2 says the duration is at most 120 minutes. | Accepted with no changes. |
+| 4 | Iterate through `existing` and reject any overlapping booking. | AC4 says there must be no overlap with an existing booking. | Accepted with no changes. |
+| 5 | Use strict overlap comparison so touching endpoints are allowed. | AC4 says touching endpoints are allowed. The specification says intervals include the start and exclude the end. | Accepted with no changes. |
+| 6 | Do not sort or modify `existing`. | AC5 says the function must never alter `existing`. | Accepted. This is an implementation choice that follows AC5. |
+| 7 | Return True only after all previous checks pass. | AC5 says return True only when AC1-AC4 hold and False otherwise. | Accepted with no changes. |
 
 **Boundary cases the assistant suggested that I kept as tests:**
 
