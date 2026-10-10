@@ -157,7 +157,7 @@ Base input for every row unless the row says otherwise: `now=540, blocked=False,
 | 15 | New booking contains existing | (570, 690) | — | False | AC4 | PASS | — |
 | 16 | Existing booking contains new | (610, 650) | — | False | AC4 | PASS | — |
 | 17 | Partial overlap from left | (570, 630) | — | False | AC4 | PASS | — |
-
+| 18 | Overlap with second existing booking is rejected | (720, 780) | existing=[(600,660),(700,760)] | False | AC4 | PASS | — |
 ---
 
 ## 5. Task 4 — debugging with evidence
@@ -168,7 +168,7 @@ cause column says why no change was needed.
 
 | # | Input (the full call) | Expected | Actual | Cause (quote the line) | Fix | Who proposed the fix |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | | | | | | |
+| 1 | `can_book(720, 780, 540, False, [(600, 660), (700, 760)])` | False | False | v1 was correct because `for ex_start, ex_end in existing:` checks every existing booking. The missing coverage was in my test suite, not in the function. | No code change. Added a test where the request overlaps the second existing booking. | Me, after M7 showed a gap in my tests. |
 
 **The debug prompt I sent, and the assistant's answer** (leave the block empty if you did not use it):
 

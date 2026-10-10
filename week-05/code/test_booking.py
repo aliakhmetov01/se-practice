@@ -76,5 +76,9 @@ class BookingTests(unittest.TestCase):
         result = can_book(570, 630, 540, False, [(600, 660)])
         self.assertIs(result, False)
 
+    def test_overlap_with_second_existing_is_rejected(self):
+        existing = [(600, 660), (700, 760)]
+        result = can_book(720, 780, 540, False, existing)
+        self.assertIs(result, False)
 if __name__ == "__main__":
     unittest.main()
