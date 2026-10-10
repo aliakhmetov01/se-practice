@@ -1,0 +1,72 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+class Student {
+  - studentId: String
+  - name: String
+  - email: String
+  + viewAvailability(startTime: DateTime, endTime: DateTime): List<Room>
+  + bookRoom(roomId: String, startTime: DateTime, endTime: DateTime): Booking
+  + cancelBooking(booking: Booking): void
+}
+
+class Administrator {
+  - adminId: String
+  - name: String
+  + blockRoom(room: Room): void
+  + unblockRoom(room: Room): void
+  + reviewUsage(startTime: DateTime, endTime: DateTime): List<Booking>
+}
+
+class Room {
+  - roomId: String
+  - roomNumber: String
+  - isBlocked: Boolean
+  + isAvailable(startTime: DateTime, endTime: DateTime): Boolean
+  + setBlocked(blocked: Boolean): void
+}
+
+class Booking {
+  - bookingId: String
+  - startTime: DateTime
+  - endTime: DateTime
+  - status: BookingStatus
+  + getDurationMinutes(): Integer
+  + cancel(): void
+  + overlapsWith(startTime: DateTime, endTime: DateTime): Boolean
+}
+
+Student "1" -- "0..*" Booking : makes >
+Room "1" -- "0..*" Booking : has >
+
+note bottom of Booking
+  Rules:
+  R1: startTime must be in the future,
+      and duration must be > 0 and <= 2 hours.
+
+  R2: Active bookings for the same room
+      cannot overlap.
+
+  R4: A successful booking produces
+      a confirmation.
+end note
+
+note bottom of Room
+  R3: A blocked room cannot accept
+      a new booking.
+end note
+
+note bottom
+  Assumptions:
+  - Touching bookings do not overlap.
+  - Blocking a room does not cancel existing bookings.
+  - A cancelled booking remains stored with CANCELLED status.
+end note
+
+@enduml

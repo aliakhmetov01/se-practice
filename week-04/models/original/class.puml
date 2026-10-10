@@ -1,0 +1,71 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+class Student {
+  - studentId: String
+  - name: String
+  - email: String
+  + viewAvailability(startTime: DateTime, endTime: DateTime): List<Room>
+  + requestBooking(room: Room, startTime: DateTime, endTime: DateTime): Booking
+  + cancelBooking(booking: Booking): void
+}
+
+class Administrator {
+  - adminId: String
+  - name: String
+  + blockRoom(room: Room): void
+  + unblockRoom(room: Room): void
+  + reviewUsage(startTime: DateTime, endTime: DateTime): List<Booking>
+}
+
+class Room {
+  - roomId: String
+  - roomNumber: String
+  - isBlocked: Boolean
+  + isAvailable(startTime: DateTime, endTime: DateTime): Boolean
+  + setBlocked(blocked: Boolean): void
+}
+
+class Booking {
+  - bookingId: String
+  - startTime: DateTime
+  - endTime: DateTime
+  - status: BookingStatus
+  + getDurationMinutes(): Integer
+  + cancel(): void
+  + overlapsWith(startTime: DateTime, endTime: DateTime): Boolean
+}
+
+class Confirmation {
+  - confirmationCode: String
+  - issuedAt: DateTime
+}
+
+' Relationships & Multiplicities
+Student "1" -- "0..*" Booking : places >
+Booking "0..*" -- "1" Room : reserves >
+Administrator "0..1" -- "0..*" Room : manages status >
+Booking "1" *-- "1" Confirmation : produces >
+
+note bottom of Booking
+  **Invariants & Rules:**
+  - R1: startTime > now AND 0 < (endTime - startTime) <= 2 hours
+  - R2: For any two active bookings b1, b2 of the same room:
+        b1.startTime >= b2.endTime OR b1.endTime <= b2.startTime
+  - R3: Cannot book if room.isBlocked == true
+end note
+
+note bottom of Confirmation
+  **R4 & US-04 Justification:**
+  Confirmation has a 1-to-1 lifecycle
+  dependency on Booking. It is created
+  upon successful booking completion.
+end note
+
+@enduml

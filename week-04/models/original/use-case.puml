@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Student" as student
+actor "Administrator" as admin
+
+rectangle "Smart Campus Study Room Booking System" {
+  usecase "US-01: View Room Availability" as UC_View
+  usecase "US-02: Book Study Room" as UC_Book
+  usecase "US-03: Cancel Booking" as UC_Cancel
+  usecase "US-04: Generate Booking Confirmation" as UC_Confirm
+  usecase "US-05a: Block Room" as UC_Block
+  usecase "US-05b: Unblock Room" as UC_Unblock
+  usecase "US-06: Review Room Usage" as UC_Review
+}
+
+' Student primary associations
+student --> UC_View
+student --> UC_Book
+student --> UC_Cancel
+
+' Administrator primary associations
+admin --> UC_Block
+admin --> UC_Unblock
+admin --> UC_Review
+
+' Include relationship justification:
+' Rule R4 & US-04: Every successful execution of "Book Study Room" unconditionally
+' generates and issues a confirmation record.
+UC_Book .> UC_Confirm : <<include>>
+
+note right of UC_Book
+  **Rules enforced:**
+  - R1: Future start, duration in (0, 2h]
+  - R2: No active overlapping booking
+  - R3: Room must not be blocked
+end note
+
+note bottom of UC_Block
+  **Assumptions:**
+  - Touching bookings (e.g. 11:00-12:00 and 12:00-13:00) do not overlap.
+  - Blocking prevents only new bookings; existing bookings persist.
+  - Students cancel only bookings they own.
+end note
+@enduml
