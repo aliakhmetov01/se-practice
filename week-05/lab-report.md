@@ -294,12 +294,10 @@ PASS   L5   report 5: debugging evidence                1 row(s) of input / expe
 PASS   L6   report 6: the critique, each point judged   critique pasted, 4 points judged
 PASS   L7   report 7: change log                        1 change-log row(s)
 PASS   L8   report 8.1: real output of your suite       suite output pasted
-FAIL   L9   report 10: conclusion of 120-180 words      section 10 has 0 words, the task asks for 120-180
+PASS   L9   report 10: conclusion of 120-180 words      152 words
 ------------------------------------------------------------------------------
 v1 (code/original/booking_v1.py): passes F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 - fails nothing - identical to your final: no
-SUMMARY pass=31 fail=1 error=0   (32 checks)
-Every FAIL or ERROR you keep goes in lab-report.md section 9 and in submission.yml known_fails.
-One you report and explain costs you nothing. One you hide costs the whole criterion.
+SUMMARY pass=32 fail=0 error=0   (32 checks)
 ```
 
 ### 8.3 Path B only — three faults I planted myself
