@@ -140,17 +140,23 @@ Base input for every row unless the row says otherwise: `now=540, blocked=False,
 
 | # | Test name | Request (start, end) | What differs from the base input | Expected | AC | Result on v1 | Result on final |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | | | | | | | |
-| 2 | | | | | | | |
-| 3 | | | | | | | |
-| 4 | | | | | | | |
-| 5 | | | | | | | |
-| 6 | | | | | | | |
-| 7 | | | | | | | |
-| 8 | | | | | | | |
-| 9 | | | | | | | |
-| 10 | | | | | | | |
-| 11 | | | | | | | |
+| 1 | Touching end is allowed | (660, 720) | — | True | AC4 | PASS | — |
+| 2 | Overlap is rejected | (630, 690) | — | False | AC4 | PASS | — |
+| 3 | Blocked room is rejected | (660, 720) | blocked=True | False | AC3 | PASS | — |
+| 4 | Exactly two hours is allowed | (720, 840) | — | True | AC2 | PASS | — |
+| 5 | Over two hours is rejected | (720, 841) | — | False | AC2 | PASS | — |
+| 6 | Starts now is rejected | (540, 570) | — | False | AC1 | PASS | — |
+| 7 | Zero length is rejected | (700, 700) | existing=[] | False | AC1 | PASS | — |
+| 8 | Reversed time is rejected | (720, 700) | existing=[] | False | AC1 | PASS | — |
+| 9 | End of day 1440 is allowed | (1380, 1440) | now=1300, existing=[] | True | AC1 | PASS | — |
+| 10 | End after 1440 is rejected | (1380, 1441) | now=1300, existing=[] | False | AC1 | PASS | — |
+| 11 | Empty existing allows valid booking | (700, 760) | existing=[] | True | AC4 | PASS | — |
+| 12 | Several existing bookings with no overlap | (700, 760) | existing=[(600,660),(800,840),(900,960)] | True | AC4 | PASS | — |
+| 13 | Existing input is not modified | (700, 760) | existing=[(800,840),(600,660)] | existing unchanged | AC5 | PASS | — |
+| 14 | Touching start is allowed | (570, 600) | — | True | AC4 | PASS | — |
+| 15 | New booking contains existing | (570, 690) | — | False | AC4 | PASS | — |
+| 16 | Existing booking contains new | (610, 650) | — | False | AC4 | PASS | — |
+| 17 | Partial overlap from left | (570, 630) | — | False | AC4 | PASS | — |
 
 ---
 
