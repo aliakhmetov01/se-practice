@@ -50,17 +50,40 @@ Use fictional sample data only. Keep the implementation simple and within one-pa
 ## 3. Task 2 — prototype v1
 
 v1 export saved in `original/` and screenshot saved as `evidence/v1.png` **before** any cleanup
-prompt: yes / no
+prompt: yes
 
 **Bolt's list of the files/components it created, pasted unedited:**
 
 ```text
-(paste here)
+- .bolt/config.json
+- .bolt/prompt
+- .gitignore
+- eslint.config.js
+- index.html
+- package.json
+- package-lock.json
+- postcss.config.js
+- tailwind.config.js
+- tsconfig.app.json
+- tsconfig.json
+- tsconfig.node.json
+- vite.config.ts
+- src/App.tsx
+- src/bookingLogic.ts
+- src/data.ts
+- src/index.css
+- src/main.tsx
+- src/types.ts
+- src/vite-env.d.ts
 ```
 
 **What v1 does — one line per thing that works, or visibly does not:**
 
--
+- Displays room availability checker interface with sample room selection and blocked status.
+- Provides input fields for current time, booking start time, and booking end time.
+- Lists existing reservations (10:00 - 11:00) for the selected room.
+- Validates interval inputs and displays Available or Unavailable badge upon check.
+- Mobile view adapts layout to single column, but touch targets and spacing require verification.
 
 **Repair prompt** (only if the first build did not run — the deck allows one, then the result is
 v1). Leave empty if you did not need it:
