@@ -136,19 +136,20 @@ in) and Bolt's answer, unedited.
 **Functional fix prompt, as sent, and Bolt's answer:**
 
 ```text
-In the current prototype, having the current time hardcoded to the system clock produces an inability to test baseline scenarios with morning slots (e.g. at 09:00), but AC1 requires accepting a candidate interval only when start is after the supplied current time, meaning the supplied current time must be configurable. Make the smallest change that fixes this behavior. Preserve the other acceptance criteria. Explain which file/component you changed and why.
+In the current prototype, selecting start time 09:00 when the supplied current time is 09:00 produces Available, but AC1 requires accepting a candidate interval only when start is strictly after the supplied current time (expected Unavailable). Make the smallest change that fixes this behavior. Preserve the other acceptance criteria. Explain which file/component you changed and why.
 ```
-
+```text
+Build passes. I changed one line in src/bookingLogic.ts: the AC1 boundary check from startMin < currentMin to startMin <= currentMin.
+Why: AC1 requires the start time to be strictly after the supplied current time. The old < comparison allowed start == current (e.g. 09:00 start with 09:00 current time) to pass as Available. Changing it to <= correctly rejects that case as Unavailable. No other acceptance criteria were touched.
+```
 **Cleanup prompt, as sent, and Bolt's answer:**
 
 ```text
-Build passes. I changed only src/App.tsx:
-
-What changed: Replaced the hardcoded useMemo that derived "current time" from new Date() (system clock, immutable at render) with a currentTime state variable initialized to the system clock but editable via a new dropdown next to the start/end time pickers. The derived currentMin now comes from that user-controlled value via labelToMinutes(currentTime).
-
-Why: AC1 says the interval is accepted only when start is after the supplied current time — not the wall clock. With the system-clock-only approach, you couldn't test morning slots (e.g. 09:00) later in the day because the real clock had already passed that time. Making the current time a configurable dropdown lets you set it to any value, so all baseline scenarios can be tested. The validation logic in bookingLogic.ts is untouched — all other acceptance criteria remain intact.
+Review only src/bookingLogic.ts for unnecessary duplication, confusing naming, or UI feedback problems. Suggest one small cleanup. Do not add features or redesign the whole application. Implement it only if it preserves AC1-AC6.
 ```
-
+```text
+Build passes. I removed the isNaN guard in src/bookingLogic.ts — it was dead code defending against NaN inputs that can't occur, since startMin and endMin are always numbers derived from dropdown selections. The validation flow now goes straight from the room check into the AC1 bounds checks, which is clearer and preserves all six acceptance criteria.
+```
 Add further blocks for further prompts.
 
 **Every change or suggestion Bolt made, judged.** Accepting is a decision; so is rejecting. Cite
@@ -157,8 +158,8 @@ the AC (or the scope) that justifies it.
 | # | What Bolt changed or suggested | accept / reject | Reason — cite the AC or the scope | Retest: which cases, result |
 | --- | --- | --- | --- | --- |
 | 1 | Added configurable Current time dropdown control in App.tsx | accept | AC1 requires candidate intervals to be evaluated against a supplied current time; without this control, baseline scenarios like 09:00 cannot be tested. | T1, T6: setting current time to 09:00 now correctly updates validation context. |
-| 2 | | accept / reject | | |
-
+| 2 | Changed boundary check from `<` to `<=` in src/bookingLogic.ts | accept | AC1 requires start time to be strictly after current time; start equal to current time must be rejected. | T6: 09:00-11:00 with current time 09:00 now correctly returns Unavailable. |
+| 3 | Removed redundant isNaN check in src/bookingLogic.ts | accept | Cleaned up dead code since input values are always parsed numbers; simplifies logic while strictly preserving AC1-AC6. | T1-T8 retested: all results remain identical. |
 ---
 
 ## 7. Change log — v1 to final
@@ -168,8 +169,8 @@ Two to four concrete changes, each one retested.
 | # | Issue | Decision | Change (file or component) | Result after retest |
 | --- | --- | --- | --- | --- |
 | 1 | Hardcoded system time prevented evaluating baseline tests at 09:00 | Fix | Added user-configurable `currentTime` dropdown in `src/App.tsx` | Pass: time can now be manually set to 09:00 for testing. |
-| 2 | | | | |
-
+| 2 | Intervals starting exactly at current time were accepted instead of rejected | Fix | Changed condition from `startMin < currentMin` to `startMin <= currentMin` in `src/bookingLogic.ts` | Pass: T6 now returns Unavailable as required by AC1. |
+| 3 | Redundant dead-code guards in validation logic | Cleanup | Removed unnecessary `isNaN` guard in `src/bookingLogic.ts` | Pass: cleaner validation pipeline, behavior unchanged. |
 ---
 
 ## 8. One generated component, in my own words
