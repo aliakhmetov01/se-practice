@@ -2,7 +2,7 @@
 
 **Name:** Ali Akhmetov
 **Group:** Monday 16:00-19:00
-**Date:** 13.10.2026
+**Date:** 15.10.2026
 
 Fill in every section. **Do not delete, rename or renumber the headings** — the checker and the
 grader find your answers by them. Add rows to any table; never remove its header.
@@ -101,16 +101,16 @@ Write each result exactly as **Available**, **Unavailable** or **Not testable** 
 no way to set up the case). Save each final run as `evidence/final-T<n>.png`.
 
 | # | Case | What you set up and request | Expected | AC | Result on v1 | Result on final | Final screenshot |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| T1 | Touching | 11:00–12:00 | Available | AC4 | Unavailable | Available / Unavailable / Not testable | final-T1.png |
-| T2 | Overlap | 10:30–11:30 | Unavailable | AC4 | Unavailable | Available / Unavailable / Not testable | final-T2.png |
-| T3 | Blocked | 11:00–12:00, room blocked | Unavailable | AC3 | Unavailable | Available / Unavailable / Not testable | final-T3.png |
-| T4 | Exactly 2 hours | 12:00–14:00 | Available | AC2 | Not testable | Available / Unavailable / Not testable | final-T4.png |
-| T5 | Over 2 hours | 12:00–14:01 | Unavailable | AC2 | Not testable | Available / Unavailable / Not testable | final-T5.png |
-| T6 | Starts now | 09:00–09:30 (current time 09:00) | Unavailable | AC1 | Not testable | Available / Unavailable / Not testable | final-T6.png |
-| T7 | Reversed times | 12:00–11:00, and the page says why | Unavailable | AC1, AC6 | Unavailable | Available / Unavailable / Not testable | final-T7.png |
-| T8 | Same check twice | T1, then T1 again without reloading | Available | AC5 | Available | Available / Unavailable / Not testable | final-T8.png |
-| T9 | Narrow screen | T1 at about 375 px wide | Available | AC6 | Not testable | Available / Unavailable / Not testable | final-T9.png |
+| --- | --- | --- | --- | --- | --- | -- | --- |
+| T1 | Touching | 11:00–12:00 | Available | AC4 | Unavailable | Available| final-T1.png |
+| T2 | Overlap | 10:30–11:30 | Unavailable | AC4 | Unavailable |Unavailable | final-T2.png |
+| T3 | Blocked | 11:00–12:00, room blocked | Unavailable | AC3 | Unavailable | Unavailable | final-T3.png |
+| T4 | Exactly 2 hours | 12:00–14:00 | Available | AC2 | Not testable | Available | final-T4.png |
+| T5 | Over 2 hours | 12:00–14:01 | Unavailable | AC2 | Not testable | Unavailable | final-T5.png |
+| T6 | Starts now | 09:00–09:30 (current time 09:00) | Unavailable | AC1 | Not testable |Unavailable | final-T6.png |
+| T7 | Reversed times | 12:00–11:00, and the page says why | Unavailable | AC1, AC6 | Unavailable | Unavailable | final-T7.png |
+| T8 | Same check twice | T1, then T1 again without reloading | Available | AC5 | Available | Available | final-T8.png |
+| T9 | Narrow screen | T1 at about 375 px wide | Available | AC6 | Not testable | Available | final-T9.png |
 
 ---
 
@@ -179,9 +179,14 @@ Pick one file or component Bolt generated that matters for AC1–AC5 — the one
 availability is the best choice. Name its path in backticks, then explain in your own words, without
 the assistant, what it does and how it decides. 60 words or more.
 
-**File:** `(write here, e.g. src/App.tsx)`
+**File:** `src/bookingLogic.ts`
 
 <!-- Write your explanation below this line -->
+The `src/bookingLogic.ts` file acts as the single source of truth for all room availability rules. Its main exported function receives the target room identifier, candidate start and end times, the supplied current time, and the existing room bookings. 
+
+First, the function immediately inspects whether the selected room has its `blocked` flag set to true (enforcing AC3); if blocked, it halts early and returns an Unavailable verdict with an explanatory message. Next, it converts time strings into absolute integer minutes since midnight to make comparisons reliable. It validates AC1 by asserting that start is strictly earlier than end and that candidate start is strictly greater than the supplied current time (`startMin <= currentMin` triggers rejection). 
+
+It then computes duration (`endMin - startMin`) and enforces AC2, rejecting any interval exceeding 120 minutes or non-positive durations. Finally, for AC4, it loops over all non-blocked confirmed reservations for the room. It checks for overlaps using the condition `startMin < booking.endMin && endMin > booking.startMin`. This strict comparison ensures that touching endpoints (such as 11:00 touching 11:00) are accepted as Available. Because all checks are pure functions operating on read-only inputs, no state or bookings array is mutated, satisfying AC5.
 
 ---
 
@@ -193,7 +198,7 @@ The same IDs as `known_fails` in `submission.yml`. Write `none` if the run is cl
 
 | Check | Why it stays |
 | --- | --- |
-| | |
+| none | All automated checks and manual baseline scenarios pass cleanly. |
 
 ### 9.2 The end of the day
 
@@ -201,14 +206,14 @@ AC1 allows `end ≤ 1440` — a booking may end at 24:00. Can a user of your fin
 23:00–24:00? How — and if not, why is that acceptable or not? (This is the value you declare in
 `submission.yml` under `assumptions.end_of_day`.)
 
--
+- In the final prototype, the time dropdown list ends at 23:00 / 23:30, meaning selecting a slot terminating precisely at 24:00 is not exposed via the select options. This is acceptable for a daytime campus room checker prototype assuming standard building operating hours, provided the underlying interval validation logic `bookingLogic.ts` mathematically supports `endMin <= 1440` without arithmetic overflow.
 
 ### 9.3 Which "now"?
 
 AC1 says "after the supplied current time". What did **v1** use as the current time, and what did
 that mean for testing case T6?
 
--
+- Version 1 used the client machine's browser clock (`new Date()`) as "now". Because testing occurred in the afternoon (around 13:40–14:30), evaluating test case T6 (a morning slot such as 09:00–09:30 with current time 09:00) was physically impossible because the hardcoded clock had already surpassed the candidate interval, causing it to fail immediately as a past event rather than testing the boundary rule `start > current_time`.
 
 ---
 
@@ -225,3 +230,4 @@ that mean for testing case T6?
      booking data." -->
 
 <!-- Write your conclusion below this line -->
+Neither of my initial predictions in Section 2 manifested as anticipated: Bolt kept the availability check strictly read-only (disproving mutation worries) and handled endpoint touches correctly. However, v1 failed fundamentally on testability: it bound "current time" to the live system clock instead of accepting a supplied parameter, preventing evaluation of morning slots, and it froze entirely on 375px mobile viewports. During cleanup, accepting an unconstrained full-state redesign suggested by generic prompts would have destroyed existing validation guarantees; instead, I rejected large-scale changes and enforced single-line surgical edits. The stark difference between looking finished and satisfying AC1–AC6 is demonstrated by test T6: visually, selecting 09:00–11:00 with current time 09:00 returned a polished green "Available" badge, but AC1 explicitly demands that candidate intervals start strictly after current time. Without boundary verification (`startMin <= currentMin`), a visually complete UI disguised a clear functional violation of the specification.
