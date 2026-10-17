@@ -15,12 +15,12 @@
      what is out of scope (payments, prerequisites, timetable clashes, waiting lists,
      cancellation) — section 2 must not mention them. Section 10 keeps your first version. -->
 
-**Scope:** (write here)
+**Scope:** The system covers authenticated students browsing course offerings for a specific semester and registering for a single offering with atomic capacity and duplicate checks, returning confirmation or explicit rejection, while excluding payments, prerequisites, timetable clash detection, and waitlists.
 
 **Assumptions:**
 
-1. (write here)
-2. (write here)
+1. The student is already authenticated, the target CourseOffering exists in the catalog, and the offering capacity is a positive integer.
+2. Catalog browsing does not reserve a seat; seat reservation and duplicate validation occur atomically at the exact moment of registration.
 
 ## 2. User stories and acceptance criteria
 
@@ -32,24 +32,24 @@
 
 ### US-01 — Browse offerings
 
-**US-01:** (write here — As a student, I want …, so that …)
+**US-01:** As an authenticated student, I want to view course offerings for a chosen semester along with their current available seats, so that I can identify which sections are open and select an offering for registration.
 
-- **AC-01** (R?): (write here — Given …, When …, Then …)
-- **AC-02** (R?): (write here)
+- **AC-01** (R1): Given an authenticated student accesses the course catalog for a designated semester, When the catalog results are retrieved and displayed, Then the system displays the course code, course title, course offering identifier, and the number of currently available places for each offering in that semester.
+- **AC-02** (R1, R2): Given a course offering has reached its maximum enrollment capacity, When an authenticated student views that offering in the semester catalog, Then the system displays 0 available places for that offering without reserving a seat during browsing.
 
 ### US-02 — Register for an offering
 
-**US-02:** (write here)
+**US-02:** As an authenticated student, I want to register for an open course offering, so that I secure an enrollment place and receive proof of registration.
 
-- **AC-03** (R?): (write here)
-- **AC-04** (R?): (write here)
+- **AC-03** (R2, R3, R4): Given an authenticated student is not enrolled in course offering OFF-101 and OFF-101 has at least 1 available place at the moment of request, When the student submits a registration request for OFF-101, Then the system creates exactly one Enrollment record linking the student to OFF-101, decrements the offering available places by 1, and returns a confirmation to the student.
+- **AC-04** (R2, R4): Given course offering OFF-102 has exactly 1 available place remaining and the student is not currently enrolled in OFF-102, When the student submits a registration request for OFF-102, Then the enrollment succeeds, available places become 0, total enrollments equal the capacity, and a confirmation is returned.
 
 ### US-03 — Receive a clear rejection
 
-**US-03:** (write here)
+**US-03:** As an authenticated student, I want to receive an explicit explanation if my registration cannot be completed, so that I know why the request was rejected and verify that no invalid records were created.
 
-- **AC-05** (R?): (write here)
-- **AC-06** (R?): (write here)
+- **AC-05** (R2, R5): Given an authenticated student who is not enrolled in OFF-201 submits a registration request, When the system rechecks capacity and determines OFF-201 has 0 available places at that moment, Then the system rejects the request, returns the explanation course full, creates no enrollment record, and leaves the enrollment count unchanged.
+- **AC-06** (R3, R5): Given an authenticated student who already has an existing enrollment record in OFF-301, When the student submits a repeat registration request for OFF-301, Then the system rejects the request, returns the explanation already enrolled, creates no duplicate enrollment, and leaves the enrollment count unchanged.
 
 ## 3. Sequence diagram
 
@@ -163,9 +163,9 @@
 
 ### B1 — Requirements (Prompt A)
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 Flash
+- **Date:** 2026-10-17
 - **Purpose:** draft 3 user stories and 6 acceptance criteria
 
 <!-- Model: the exact model with its version, as the tool shows it (e.g. "GPT-5 Thinking",
@@ -175,39 +175,246 @@
 **Prompt:**
 
 ~~~~text
-(paste here)
+Act as a requirements analyst. Use only this course registration scenario and rules R1-R5: A student browses an electronic course catalog, chooses a course offering and requests registration. Each offering has a limited number of places. A Course describes a subject. A Course Offering is one scheduled section in one semester. Registration always targets a specific offering. Assume that the student is signed in, the selected offering exists, and its capacity is a positive whole number.
+R1. Catalog: Show the course code, title, offering and available places for one semester.
+R2. Capacity: Recheck current availability when registering. Enrollment must never exceed the offering's capacity.
+R3. Duplicates: A student may have at most one enrollment in the same offering. Reject a repeat request.
+R4. Success: Create exactly one Enrollment linking the student and offering, update availability and return a confirmation.
+R5. Rejection: Explain "course full" or "already enrolled". Create no enrollment and leave the enrollment count unchanged.
+Out of scope: payments, prerequisites, timetable clashes, waiting lists, cancellation.
+My initial assumptions are 1. The student is already authenticated, the target CourseOffering exists in the catalog, and the offering capacity is a positive integer. 2. Catalog browsing does not reserve a seat; seat reservation and duplicate validation occur atomically at the exact moment of registration.
+Draft 3 user stories and 2 Given / When / Then acceptance criteria for each. Use IDs US-01 to US-03 and AC-01 to AC-06. Map each criterion to rule IDs.
+Cover normal and rejection behavior. List uncertainty separately. Do not add excluded features or invent university policies.
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+### User Stories & Acceptance Criteria
+
+#### US-01: Browse Course Offerings
+
+* **As an** authenticated student,
+* **I want to** view course offerings for a chosen semester along with their current available seats,
+* **So that** I can identify which sections are open and select an offering for registration.
+* **AC-01: Catalog view displaying offering details and availability**
+* **Rule Mapping:** R1
+* **Given** an authenticated student accesses the course catalog for a designated semester,
+* **When** the catalog results are retrieved and displayed,
+* **Then** the system displays the course code, course title, course offering identifier, and the number of currently available places for each offering in that semester.
+
+
+* **AC-02: Reflecting zero available places when an offering is filled**
+* **Rule Mapping:** R1, R2
+* **Given** a course offering has reached its maximum enrollment capacity,
+* **When** an authenticated student views that offering in the semester catalog,
+* **Then** the system displays 0 available places for that offering without reserving a seat during browsing.
+
+
+
+---
+
+#### US-02: Successful Course Registration
+
+* **As an** authenticated student,
+* **I want to** register for an open course offering,
+* **So that** I secure an enrollment place and receive proof of registration.
+* **AC-03: Successful enrollment when capacity is available and no duplicate exists**
+* **Rule Mapping:** R2, R3, R4
+* **Given** an authenticated student is not enrolled in course offering `OFF-101`, and `OFF-101` has at least 1 available place at the moment of request,
+* **When** the student submits a registration request for `OFF-101`,
+* **Then** the system creates exactly one Enrollment record linking the student to `OFF-101`, decrements the offering's available places by 1, and returns a confirmation to the student.
+
+
+* **AC-04: Atomic boundary check on the final remaining seat**
+* **Rule Mapping:** R2, R4
+* **Given** course offering `OFF-102` has exactly 1 available place remaining and the student is not currently enrolled in `OFF-102`,
+* **When** the student submits a registration request for `OFF-102`,
+* **Then** the enrollment succeeds, available places become 0, total enrollments equal the capacity, and a confirmation is returned.
+
+
+
+---
+
+#### US-03: Registration Rejection Handling
+
+* **As an** authenticated student,
+* **I want to** receive an explicit explanation if my registration cannot be completed,
+* **So that** I know why the request was rejected and verify that no invalid records were created.
+* **AC-05: Rejection due to offering capacity reached ("course full")**
+* **Rule Mapping:** R2, R5
+* **Given** an authenticated student who is not enrolled in `OFF-201` submits a registration request,
+* **When** the system rechecks capacity and determines `OFF-201` has 0 available places at that moment,
+* **Then** the system rejects the request, returns the explanation "course full", creates no enrollment record, and leaves the enrollment count unchanged.
+
+
+* **AC-06: Rejection due to existing enrollment ("already enrolled")**
+* **Rule Mapping:** R3, R5
+* **Given** an authenticated student who already has an existing enrollment record in `OFF-301`,
+* **When** the student submits a repeat registration request for `OFF-301` (regardless of offering availability),
+* **Then** the system rejects the request, returns the explanation "already enrolled", creates no duplicate enrollment, and leaves the enrollment count unchanged.
+
+
+
+---
+
+### Areas of Uncertainty
+
+1. **Precedence of Rejection Messages:** If a student who is *already enrolled* in an offering submits a duplicate registration request for that same offering at a moment when the offering is also *at capacity (0 available places)*, R5 specifies both "course full" and "already enrolled" as valid explanations, but does not state which condition evaluated takes priority.
+2. **Catalog Semester Filtering Mechanism:** While R1 mandates showing details for "one semester," it is unspecified whether the catalog defaults to the current active semester automatically or requires an explicit semester parameter from the student before rendering.
 ~~~~
 
 ### B2 — UML drafts (Prompt B)
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 Flash
+- **Date:** 2026-10-17
 - **Purpose:** draft the sequence and class diagrams
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+Using my approved scenario, R1-R5, stories and criteria below, return separate PlantUML code blocks for a sequence diagram and a domain class diagram.
+Sequence: include catalog browsing and guarded success, full-course and duplicate outcomes. Model final checks and creation as one atomic operation.
+Class: show domain concepts, useful attributes and multiplicities. State the capacity and uniqueness constraints. Explain assumptions and any technical lifelines.
+
+Approved scenario and rules:
+A student browses an electronic course catalog, chooses a course offering and requests registration. Each offering has a limited number of places. A Course describes a subject. A Course Offering is one scheduled section in one semester. Registration always targets a specific offering. Assume that the student is signed in, the selected offering exists, and its capacity is a positive whole number.
+R1. Catalog: Show the course code, title, offering and available places for one semester.
+R2. Capacity: Recheck current availability when registering. Enrollment must never exceed the offering's capacity.
+R3. Duplicates: A student may have at most one enrollment in the same offering. Reject a repeat request.
+R4. Success: Create exactly one Enrollment linking the student and offering, update availability and return a confirmation.
+R5. Rejection: Explain "course full" or "already enrolled". Create no enrollment and leave the enrollment count unchanged.
+Out of scope: payments, prerequisites, timetable clashes, waiting lists, cancellation.
+
+Approved stories and criteria:
+US-01: As an authenticated student, I want to view course offerings for a chosen semester along with their current available seats, so that I can identify which sections are open and select an offering for registration.
+- AC-01 (R1): Given an authenticated student accesses the course catalog for a designated semester, When the catalog results are retrieved and displayed, Then the system displays the course code, course title, course offering identifier, and the number of currently available places for each offering in that semester.
+- AC-02 (R1, R2): Given a course offering has reached its maximum enrollment capacity, When an authenticated student views that offering in the semester catalog, Then the system displays 0 available places for that offering without reserving a seat during browsing.
+
+US-02: As an authenticated student, I want to register for an open course offering, so that I secure an enrollment place and receive proof of registration.
+- AC-03 (R2, R3, R4): Given an authenticated student is not enrolled in course offering OFF-101 and OFF-101 has at least 1 available place at the moment of request, When the student submits a registration request for OFF-101, Then the system creates exactly one Enrollment record linking the student to OFF-101, decrements the offering available places by 1, and returns a confirmation to the student.
+- AC-04 (R2, R4): Given course offering OFF-102 has exactly 1 available place remaining and the student is not currently enrolled in OFF-102, When the student submits a registration request for OFF-102, Then the enrollment succeeds, available places become 0, total enrollments equal the capacity, and a confirmation is returned.
+
+US-03: As an authenticated student, I want to receive an explicit explanation if my registration cannot be completed, so that I know why the request was rejected and verify that no invalid records were created.
+- AC-05 (R2, R5): Given an authenticated student who is not enrolled in OFF-201 submits a registration request, When the system rechecks capacity and determines OFF-201 has 0 available places at that moment, Then the system rejects the request, returns the explanation course full, creates no enrollment record, and leaves the enrollment count unchanged.
+- AC-06 (R3, R5): Given an authenticated student who already has an existing enrollment record in OFF-301, When the student submits a repeat registration request for OFF-301, Then the system rejects the request, returns the explanation already enrolled, creates no duplicate enrollment, and leaves the enrollment count unchanged.
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+@startuml
+skinparam style strictuml
+skinparam classAttributeIconSize 0
+hide empty methods
+
+class Student {
+    - studentId : String
+    - name : String
+}
+
+class Course {
+    - courseCode : String
+    - title : String
+    - description : String
+}
+
+class CourseOffering {
+    - offeringId : String
+    - section : String
+    - semester : String
+    - capacity : Integer
+    - availablePlaces : Integer
+    + isEnrolled(studentId : String) : Boolean
+    + hasCapacity() : Boolean
+}
+
+class Enrollment {
+    - enrollmentId : String
+    - enrollmentDate : DateTime
+}
+
+Course "1" -- "0..*" CourseOffering : offered as >
+CourseOffering "1" <-- "0..*" Enrollment : targets >
+Student "1" <-- "0..*" Enrollment : recorded for >
+
+note "Capacity Constraint (R2):\n0 <= availablePlaces <= capacity\ncount(Enrollment) <= capacity\navailablePlaces = capacity - count(Enrollment)" as N_Capacity
+CourseOffering .. N_Capacity
+
+note "Uniqueness Constraint (R3):\nA Student may appear in at most one\nEnrollment targeting the same CourseOffering.\ncontext CourseOffering inv:\nself.enrollment->isUnique(student)" as N_Uniqueness
+Enrollment .. N_Uniqueness
+
+@enduml
+
+@startuml
+skinparam style strictuml
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Student" as student
+box "System Boundary"
+    participant "RegistrationController" as controller
+    participant "Catalog" as catalog
+    participant "offering : CourseOffering" as offering
+    participant "enrollment : Enrollment" as enrollment
+end box
+
+== Catalog Browsing (US-01 / R1) ==
+
+student -> controller : browseCatalog(semester)
+activate controller
+
+controller -> catalog : getOfferings(semester)
+activate catalog
+
+catalog --> controller : offeringList
+deactivate catalog
+
+controller --> student : displayOfferings(code, title, offeringId, availablePlaces)
+deactivate controller
+
+== Course Registration (US-02 & US-03 / R2, R3, R4, R5) ==
+
+student -> controller : register(studentId, offeringId)
+activate controller
+
+controller -> offering : registerStudent(studentId)
+activate offering
+
+group Critical Section [Atomic Check & Enrollment]
+    alt [already enrolled (R3, R5)]
+        offering --> controller : reject("already enrolled")
+        controller --> student : showRejection("already enrolled")
+
+    else [offering full: availablePlaces == 0 (R2, R5)]
+        offering --> controller : reject("course full")
+        controller --> student : showRejection("course full")
+
+    else [availablePlaces > 0 and not already enrolled (R2, R3, R4)]
+        create enrollment
+        offering -> enrollment : new(studentId, offeringId)
+        activate enrollment
+        enrollment --> offering : enrollmentInstance
+        deactivate enrollment
+
+        offering -> offering : decrementAvailablePlaces()
+        offering --> controller : confirm(enrollmentId)
+        controller --> student : showConfirmation(enrollmentId)
+    end
+end
+
+deactivate offering
+deactivate controller
+
+@enduml
 ~~~~
 
 ### B3 — Model critique (Prompt C)
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 Flash
+- **Date:** 2026-10-17
 - **Purpose:** review both models against R1–R5 and T1–T4
 
 **Prompt:**
@@ -224,9 +431,9 @@
 
 ### B4 — Focused revision (Prompt D)
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 Flash
+- **Date:** 2026-10-17
 - **Purpose:** apply my accepted review decisions
 
 **Prompt:**
