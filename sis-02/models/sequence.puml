@@ -37,15 +37,15 @@ controller -> offering : registerStudent(studentId)
 activate offering
 
 group Critical Section [Atomic Check & Enrollment]
-    alt [already enrolled (R3, R5)]
+    alt already enrolled
         offering --> controller : reject("already enrolled")
         controller --> student : showRejection("already enrolled")
 
-    else [offering full: availablePlaces == 0 (R2, R5)]
+    else course full
         offering --> controller : reject("course full")
         controller --> student : showRejection("course full")
 
-    else [availablePlaces > 0 and not already enrolled (R2, R3, R4)]
+    else not enrolled and places left
         create enrollment
         offering -> enrollment : new(studentId, offeringId)
         activate enrollment

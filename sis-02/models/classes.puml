@@ -26,6 +26,8 @@ class CourseOffering {
     - availablePlaces : Integer
     + isEnrolled(studentId : String) : Boolean
     + hasCapacity() : Boolean
+    + registerStudent(studentId : String) : Enrollment
+    + decrementAvailablePlaces() : void
 }
 
 class Enrollment {
@@ -34,8 +36,8 @@ class Enrollment {
 }
 
 Course "1" -- "0..*" CourseOffering : offered as >
-CourseOffering "1" <-- "0..*" Enrollment : targets >
-Student "1" <-- "0..*" Enrollment : recorded for >
+CourseOffering "1" -- "0..*" Enrollment : targets >
+Student "1" -- "0..*" Enrollment : holds >
 
 note "Capacity Constraint (R2):\n0 <= availablePlaces <= capacity\ncount(Enrollment) <= capacity\navailablePlaces = capacity - count(Enrollment)" as N_Capacity
 CourseOffering .. N_Capacity
