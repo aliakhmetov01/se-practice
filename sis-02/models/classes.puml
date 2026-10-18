@@ -1,0 +1,48 @@
+' SIS #02 — your FINAL class diagram goes here, as PlantUML (@startuml … @enduml).
+' The file is classes.puml (plural), not class.puml as in Week 04.
+' Start from the AI's original in models/original/classes.puml, apply your accepted review
+' decisions, then render it to models/img/classes.png (or .svg). README section 6.
+@startuml
+skinparam style strictuml
+skinparam classAttributeIconSize 0
+hide empty methods
+
+class Student {
+    - studentId : String
+    - name : String
+}
+
+class Course {
+    - courseCode : String
+    - title : String
+    - description : String
+}
+
+class CourseOffering {
+    - offeringId : String
+    - section : String
+    - semester : String
+    - capacity : Integer
+    - availablePlaces : Integer
+    + isEnrolled(studentId : String) : Boolean
+    + hasCapacity() : Boolean
+    + registerStudent(studentId : String) : Enrollment
+    + decrementAvailablePlaces() : void
+}
+
+class Enrollment {
+    - enrollmentId : String
+    - enrollmentDate : DateTime
+}
+
+Course "1" -- "0..*" CourseOffering : offered as >
+CourseOffering "1" -- "0..*" Enrollment : targets >
+Student "1" -- "0..*" Enrollment : holds >
+
+note "Capacity Constraint (R2):\n0 <= availablePlaces <= capacity\ncount(Enrollment) <= capacity\navailablePlaces = capacity - count(Enrollment)" as N_Capacity
+CourseOffering .. N_Capacity
+
+note "Uniqueness Constraint (R3):\nA Student may appear in at most one\nEnrollment targeting the same CourseOffering.\ncontext CourseOffering inv:\nself.enrollment->isUnique(student)" as N_Uniqueness
+Enrollment .. N_Uniqueness
+
+@enduml
