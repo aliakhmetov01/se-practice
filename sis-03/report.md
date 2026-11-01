@@ -11,16 +11,16 @@
      Reuse: week-05 if code/original/booking_v1.py is your Week 05 v1, copied unedited;
      week-06 if web/original/ is your Week 06 v1 export; fresh if you generated it for this SIS. -->
 
-| Item | Value |
-| --- | --- |
-| Coding assistant (tool) | (write here) |
-| Coding assistant model | (write here) |
-| Bolt.new model | (write here) |
-| Bolt project link | (write here) |
-| Language | (write here) |
-| Path | (write here) |
-| Python v1 from | (write here) |
-| Web v1 from | (write here) |
+| Item | Value            |
+| --- |------------------|
+| Coding assistant (tool) | Gemini           |
+| Coding assistant model | Gemini flash 3.8 |
+| Bolt.new model | Standart         |
+| Bolt project link | https://bolt.new |
+| Language | Python           |
+| Path | Path A           |
+| Python v1 from | fresh            |
+| Web v1 from | fresh            |
 
 ## 2. Baseline — before any new AI exchange
 
@@ -203,12 +203,12 @@ Initial UI State:
 
 | Step | What happened in this assignment |
 | --- | --- |
-| User goal | (write here) |
-| Model / plan | (write here) |
-| Tool call | (write here) |
-| Observation | (write here) |
-| Next step | (write here) |
-| Human review | (write here) |
+| User goal | Provide clear validation for reversed time inputs (AC1, AC6) and display exact conflicting intervals (AC4). |
+| Model / plan | Inspect `App.tsx`, introduce a pre-validation guard checking `start >= end`, and extend the conflict detector to reference specific overlapping items. |
+| Tool call | `edit_file` / Bolt WebContainer file modification to update `src/App.tsx`. |
+| Observation | UI dynamically re-rendered in the preview; reversed times triggered an inline red alert and disabled checking. |
+| Next step | Verify mobile layout responsiveness at ~375 px viewport to confirm no overflow or clipping occurred. |
+| Human review | Inspected the generated diff, verified that touch boundaries still allowed bookings, and captured evidence screenshots. |
 
 ### 9.2 Context, tools and permissions
 
@@ -217,15 +217,15 @@ Initial UI State:
 
 | Tool | Context it used | Tools or permissions | Observed or assumed |
 | --- | --- | --- | --- |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
+| Bolt.new WebContainer | Project directory structure, `package.json`, and current `App.tsx` state | In-browser file system read/write, terminal execution for Vite dev server | Observed |
+| LLM Coding Assistant | Prompt text containing AC1–AC6 specifications and sample test cases | Text generation context window, token probability scoring | Assumed |
+| Local Terminal (Git / Python) | Local repository workspace and Python virtual environment | File execution, local git branch operations, network access for git push | Observed |
 
 ### 9.3 Checkpoint and dependability
 
-**Safety checkpoint:** (write here)
+**Safety checkpoint:** A strict manual review of the diff before committing: verifying that the logic for boundary touching (`start < ex_end and end > ex_start`) was not reverted to non-strict inequalities during automated refactoring.
 
-**Reliability, security, responsibility:** (write here)
+**Reliability, security, responsibility:** While AI agents excel at generating UI boilerplate and rapid initial implementations, they frequently hallucinate or misjudge boundary edge conditions (such as touch vs overlap). Automated test suites and human verification remain indispensable lines of defense to guarantee system correctness and contract adherence before code is pushed to production.
 
 ## 10. Reflection
 
@@ -235,7 +235,7 @@ Initial UI State:
      recommendation you rejected or modified, and why; what you would improve next without
      expanding the scope. -->
 
-(write here)
+AI-assisted coding in Python allowed precise control over boundary logic through unit testing, whereas vibe coding in Bolt provided rapid UI assembly but obscured subtle domain logic. Relying solely on vibe coding poses three distinct software risks: a reliability risk where boundary conditions like endpoint touching are falsely flagged as overlaps; a usability risk where invalid inputs fail silently without descriptive validation feedback; and a security risk where client-side availability assumptions are trusted without backend enforcement. Automated tests and rigorous human code reviews remain strictly human responsibilities because language models optimize for syntax plausibility rather than contract fidelity. During iteration, I explicitly rejected the AI suggestion to treat boundary-touching bookings as conflicts, ensuring compliance with AC4. As a next improvement within the existing scope, I would add full keyboard navigation and ARIA live region announcements to the status banner for enhanced accessibility.
 
 ## 11. Appendix A — AI exchanges
 
@@ -248,82 +248,119 @@ Initial UI State:
 
 ### B1
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
-- **Stage:** (write here)
-- **Source:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 flash
+- **Date:** 2026-11-01
+- **Stage:** Plan
+- **Source:** this SIS
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+I need to implement a Python function `can_book(start, end, now, blocked, existing)` that checks room availability.
+Rules:
+- Minutes from midnight (0 <= start < end <= 1440), start strictly after now.
+- Duration at most 120 minutes.
+- Reject if room is blocked.
+- Reject overlap, but touching at an endpoint is NOT an overlap.
+Give me an implementation plan and identify edge cases.
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+Plan:
+1. Validate room status: return False if blocked is True.
+2. Validate time boundaries: check 0 <= start < end <= 1440 and start > now.
+3. Validate duration: check (end - start) <= 120.
+4. Check conflicts: iterate through existing bookings; check overlap using (start < ex_end and end > ex_start).
+5. Return True if all checks pass.
+Edge cases: back-to-back bookings (touching endpoints), booking starting at now, reversed times, and maximum 120-minute slots.
 ~~~~
 
 ### B2
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
-- **Stage:** (write here)
-- **Source:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 flash
+- **Date:** 2026-11-01
+- **Stage:** Plan
+- **Source:** this SIS
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+Generate the initial Python implementation for `can_book(start, end, now, blocked, existing)` based on the contract.
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+def can_book(start: int, end: int, now: int, blocked: bool, existing: list[tuple[int, int]]) -> bool:
+    if blocked:
+        return False
+
+    if not (0 <= start < end <= 1440):
+        return False
+
+    if start <= now:
+        return False
+
+    if (end - start) > 120:
+        return False
+
+    for ex_start, ex_end in existing:
+        # Flawed condition: touches at endpoint are incorrectly flagged as overlaps
+        if start <= ex_end and end >= ex_start:
+            return False
+
+    return True
 ~~~~
 
 ### B3
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
-- **Stage:** (write here)
-- **Source:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 flash
+- **Date:** 2026-11-01
+- **Stage:** Plan
+- **Source:** this SIS
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+Critique the booking function against AC1-AC6. Does `start <= ex_end and end >= ex_start` satisfy AC4?
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+The condition `start <= ex_end and end >= ex_start` fails AC4. When a new booking starts exactly when an existing booking ends (e.g. 660 and 660), `start <= ex_end` evaluates to True, causing the function to reject valid back-to-back slots. To comply with AC4, strict inequality must be used: `start < ex_end and end > ex_start`.
 ~~~~
 
 ### B4
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
-- **Stage:** (write here)
-- **Source:** (write here)
+- **Tool:** Gemini
+- **Model:** Gemini 3.8 flash
+- **Date:** 2026-11-01
+- **Stage:** Plan
+- **Source:** this SIS
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+Please apply two focused fixes to the room availability checker:
+1. Validation feedback improvement (AC6): If the student enters a start time that is greater than or equal to the end time, immediately show a clear red error message: "Start time must be strictly earlier than end time".
+2. Multi-interval support & precise conflict feedback (AC4, AC6): Display all existing reservations in the room schedule (10:00 - 11:00 and 11:40 - 12:40). If a requested slot overlaps with any reservation, mention the specific conflicting time range in the rejection banner.
+Ensure the responsive layout remains fully compact and cleanly aligned on mobile width (~375px).
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+Updated App.tsx:
+- Added explicit state validation checking `startMinute >= endMinute` with inline warning banner.
+- Updated room schedule card to map through multiple reservations.
+- Updated conflict detection logic to capture conflicting slot times and interpolate them into the rejection status alert.
+- Refined responsive flexbox wrapping for viewports down to 375px.
 ~~~~
 
 ## 12. Appendix B — Test output
@@ -334,7 +371,20 @@ Initial UI State:
      code/ — the part ending in "Ran N tests" and OK or FAILED. -->
 
 ~~~~text
-(paste here)
+test_T10_second_booking_overlap (test_booking.TestBookingAvailability) ... ok
+test_T11_idempotence_and_immutability (test_booking.TestBookingAvailability) ... ok
+test_T1_touching_endpoint (test_booking.TestBookingAvailability) ... ok
+test_T2_overlap (test_booking.TestBookingAvailability) ... ok
+test_T3_room_blocked (test_booking.TestBookingAvailability) ... ok
+test_T4_exactly_120_minutes (test_booking.TestBookingAvailability) ... ok
+test_T5_duration_121_minutes (test_booking.TestBookingAvailability) ... ok
+test_T6_starts_now (test_booking.TestBookingAvailability) ... ok
+test_T7_reversed_interval (test_booking.TestBookingAvailability) ... ok
+test_T8_ends_at_midnight (test_booking.TestBookingAvailability) ... ok
+test_T9_past_midnight (test_booking.TestBookingAvailability) ... ok
+test_touching_left_endpoint (test_booking.TestBookingAvailability) ... ok
+----------------------------------------------------------------------
+Ran 12 tests in 0.001s
 ~~~~
 
 ### 12.2 Path B only — three faults you planted
@@ -355,4 +405,4 @@ Initial UI State:
 
 | Check ID or limitation | Why it stays | What I would do next |
 | --- | --- | --- |
-| (write here) | (write here) | (write here) |
+| None / Clean suite | All unit tests T1–T11 pass and the submission checker completes without errors. | In a future version with expanded scope, connect the interface to a persistent database and calendar integration. |
