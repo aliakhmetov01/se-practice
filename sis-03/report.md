@@ -143,18 +143,18 @@ Initial UI State:
 
 | Case | Name | Input | Expected | Python v1 | Python final | Page v1 | Page final |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T1 | Touching | 660–720 | Available | | | | |
-| T2 | Overlap | 630–690 | Unavailable | | | | |
-| T3 | Blocked | 660–720, blocked | Unavailable | | | | |
-| T4 | Exactly 120 min | 720–840 | Available | | | | |
-| T5 | 121 min | 720–841 | Unavailable | | | | |
-| T6 | Starts now | 540–570 | Unavailable | | | | |
-| T7 | Reversed | 720–660 | Unavailable | | | | |
-| T8 | Ends at midnight | 1380–1440 | Available | | | | |
-| T9 | Past midnight | 1380–1441 | Unavailable | | | | |
-| T10 | Second booking | 720–780, existing (600–660), (700–760) | Unavailable | | | | |
-| T11 | Same check twice | 660–720, twice | Available | | | | |
-| T12 | Narrow screen | T1 at ~375 px wide | Available | n/a | n/a | | |
+| T1 | Touching | 660–720 | Available | False | True | Available | Available |
+| T2 | Overlap | 630–690 | Unavailable | False | False | Unavailable | Unavailable |
+| T3 | Blocked | 660–720, blocked | Unavailable | False | False | Unavailable | Unavailable |
+| T4 | Exactly 120 min | 720–840 | Available | True | True | Available | Available |
+| T5 | 121 min | 720–841 | Unavailable | False | False | Unavailable | Unavailable |
+| T6 | Starts now | 540–570 | Unavailable | False | False | Unavailable | Unavailable |
+| T7 | Reversed | 720–660 | Unavailable | False | False | Unavailable | Unavailable |
+| T8 | Ends at midnight | 1380–1440 | Available | True | True | Not testable | Not testable |
+| T9 | Past midnight | 1380–1441 | Unavailable | False | False | Not testable | Not testable |
+| T10 | Second booking | 720–780, existing (600–660), (700–760) | Unavailable | False | False | Unavailable | Unavailable |
+| T11 | Same check twice | 660–720, twice | Available | False | True | Unavailable | Available |
+| T12 | Narrow screen | T1 at ~375 px wide | Available | n/a | n/a | Available | Available |
 
 ## 6. Traceability
 
@@ -163,12 +163,12 @@ Initial UI State:
 
 | AC | Implementation / file | Test input | Expected | v1 actual | Final actual |
 | --- | --- | --- | --- | --- | --- |
-| AC1 | (write here) | (write here) | (write here) | (write here) | (write here) |
-| AC2 | (write here) | (write here) | (write here) | (write here) | (write here) |
-| AC3 | (write here) | (write here) | (write here) | (write here) | (write here) |
-| AC4 | (write here) | (write here) | (write here) | (write here) | (write here) |
-| AC5 | (write here) | (write here) | (write here) | (write here) | (write here) |
-| AC6 | (write here) | (write here) | (write here) | (write here) | (write here) |
+| AC1 | `code/booking.py:15-20`, `src/App.tsx:checkSlot` | T6, T7, T8, T9 | Available for valid intervals strictly after now; Unavailable otherwise | T6: False, T7: False, T8: True, T9: False | T6: False, T7: False, T8: True, T9: False |
+| AC2 | `code/booking.py:23-24`, `src/App.tsx:checkDuration` | T4, T5 | Available for duration <= 120; Unavailable for duration > 120 | T4: True, T5: False | T4: True, T5: False |
+| AC3 | `code/booking.py:11-12`, `src/App.tsx:checkBlocked` | T3 | Unavailable when blocked is True | False | False |
+| AC4 | `code/booking.py:27-29`, `src/App.tsx:checkOverlap` | T1, T2, T10 | Available when touching at boundary; Unavailable when overlapping | T1: False, T2: False, T10: False | T1: True, T2: False, T10: False |
+| AC5 | `code/booking.py:32`, `src/App.tsx:renderBadge` | T11 | Pure boolean Available/Unavailable; zero mutation of existing list | False (unmutated) | True (unmutated) |
+| AC6 | `src/App.tsx:feedbackAlert`, `index.html` viewport | T12 | Clear rejection messages; responsive layout at ~375 px mobile screen | Available (visual clipping on small screen) | Available (responsive layout with clear feedback) |
 
 ## 7. Issue log
 
