@@ -179,10 +179,10 @@ Initial UI State:
 
 | # | Issue | Reproduction | Priority | Prompt / change | Retest result |
 | --- | --- | --- | --- | --- | --- |
-| 1 | (write here) | (write here) | (write here) | (write here) | (write here) |
-| 2 | (write here) | (write here) | (write here) | (write here) | (write here) |
+| 1 | Lack of specific validation feedback when start time is after end time; ambiguous error banner. | Enter Start 12:00, End 11:00 (T7 / AC1, AC6). | High | "Add explicit validation rule and user feedback: if start time is greater than or equal to end time, display an explicit error alert stating 'Start time must be strictly earlier than end time'." | Displays clear red alert: "Start time must be strictly earlier than end time". Retest T7 passed. |
+| 2 | Schedule card only displays a single fixed reservation, preventing multi-interval conflict verification and lacks conflict details. | Enter 12:00–13:00 when existing bookings contain (10:00–11:00) and (11:40–12:40) (T10 / AC4). | Medium | "Display all existing bookings in the room schedule card and when an overlap occurs, specify the exact conflicting time range in the rejection banner." | UI displays full schedule and explicitly reports which reservation caused the conflict. Retest T10 passed. |
 
-**Before / after:** `evidence/before-1.png` → `evidence/after-1.png` show issue (write here)
+**Before / after:** `evidence/before-1.png` → `evidence/after-1.png` show issue 1 (generic / missing validation for reversed time range replaced with specific inline feedback).
 
 ## 8. Critique decisions
 
@@ -192,10 +192,9 @@ Initial UI State:
 
 | # | AI claim or recommendation | How I verified it | Decision | Reason (AC or case) |
 | --- | --- | --- | --- | --- |
-| 1 | (write here) | (write here) | (write here) | (write here) |
-| 2 | (write here) | (write here) | (write here) | (write here) |
-| 3 | (write here) | (write here) | (write here) | (write here) |
-
+| 1 | AI suggested rejecting slots that touch an existing booking boundary (`start <= ex_end and end >= ex_start`) to prevent scheduling collisions. | Ran test case T1 (660–720 against 600–660). | Reject | Directly violates AC4, which explicitly states that touching at an endpoint is NOT an overlap and must be allowed. |
+| 2 | AI recommended enforcing duration validation directly on the client side (`(end - start) <= 120`). | Tested T4 (120 min) and T5 (121 min) in web and Python. | Accept | Complies with AC2: exactly 120 minutes is permitted, while 121 minutes is rejected. |
+| 3 | AI recommended auto-adjusting an invalid reversed time range (e.g. automatically flipping end and start if start > end). | Evaluated test case T7 (720–660). | Modify | Modified to strictly reject the request and show a validation error instead of auto-adjusting, as AC1 and AC6 require explicit validation and pure query behavior without hidden side effects. |
 ## 9. Coding-agent analysis
 
 ### 9.1 The loop
