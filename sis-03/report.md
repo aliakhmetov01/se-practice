@@ -15,7 +15,7 @@
 | --- |------------------|
 | Coding assistant (tool) | Gemini           |
 | Coding assistant model | Gemini flash 3.8 |
-| Bolt.new model | Standart         |
+| Bolt.new model | not displayed    |
 | Bolt project link | https://bolt.new |
 | Language | Python           |
 | Path | Path A           |
@@ -122,7 +122,7 @@ Initial UI State:
 | Generated file or component | Path | Its role |
 | --- | --- | --- |
 | `App.tsx` | `src/App.tsx` | Main application component containing time input controls, room status toggle, availability checking logic, and status badge rendering. |
-| `RoomSchedule.tsx` | `src/components/RoomSchedule.tsx` | Component rendering the list of fictional existing room reservations and current time reference. |
+| `AvailabilityForm.tsx` | `src/components/AvailabilityForm.tsx` | Form component managing the booking start/end time selectors and the check availability trigger. |
 
 **What v1 does:**
 
@@ -235,7 +235,7 @@ Initial UI State:
      recommendation you rejected or modified, and why; what you would improve next without
      expanding the scope. -->
 
-AI-assisted coding in Python allowed precise control over boundary logic through unit testing, whereas vibe coding in Bolt provided rapid UI assembly but obscured subtle domain logic. Relying solely on vibe coding poses three distinct software risks: a reliability risk where boundary conditions like endpoint touching are falsely flagged as overlaps; a usability risk where invalid inputs fail silently without descriptive validation feedback; and a security risk where client-side availability assumptions are trusted without backend enforcement. Automated tests and rigorous human code reviews remain strictly human responsibilities because language models optimize for syntax plausibility rather than contract fidelity. During iteration, I explicitly rejected the AI suggestion to treat boundary-touching bookings as conflicts, ensuring compliance with AC4. As a next improvement within the existing scope, I would add full keyboard navigation and ARIA live region announcements to the status banner for enhanced accessibility.
+AI-assisted coding in Python allowed precise control over boundary logic through unit testing, whereas vibe coding in Bolt provided rapid UI assembly but obscured subtle domain logic. Relying solely on vibe coding poses three distinct software risks: a reliability risk where boundary conditions like endpoint touching are falsely flagged as overlaps; a usability risk where invalid inputs fail silently without descriptive validation feedback; and a security risk where client-side availability assumptions are trusted without backend enforcement. Automated tests and rigorous human code reviews remain strictly human responsibilities because language models optimize for syntax plausibility rather than contract fidelity. During iteration, I explicitly rejected the AI suggestion to treat boundary-touching bookings as conflicts, ensuring compliance with AC4. As a next improvement within the existing scope.
 
 ## 11. Appendix A — AI exchanges
 
@@ -338,8 +338,8 @@ The condition `start <= ex_end and end >= ex_start` fails AC4. When a new bookin
 
 ### B4
 
-- **Tool:** Gemini
-- **Model:** Gemini 3.8 flash
+- **Tool:** Bolt.new
+- **Model:** not displayed
 - **Date:** 2026-11-01
 - **Stage:** Plan
 - **Source:** this SIS

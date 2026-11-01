@@ -16,15 +16,15 @@ assignment: "sis-03"            # do not edit
 student:
   name: Ali Akhmetov
   student_id: 25B032081
-  group: IS-2301
+  group: Monday 16:00-19:00
   github: aliakhmetov01
 
 assistant:
-  tool: ChatGPT
-  model: GPT-4o
+  tool: Gemini
+  model: Gemini flash 3.8
 
 bolt:
-  model: Claude 3.5 Sonnet
+  model: not displayed
   project_url: not-shared
 
 language:

@@ -8,9 +8,9 @@ including anything an AI tool produced[cite: 2].
 |----------|--------------------| --- | --- | --- |
 | Gemini   | Gemini 3.8 flash   | the plan (stage A) | `report.md` | this SIS |
 | Gemini   | Gemini 3.8 flash   | Python v1 (stage B) | `code/original/booking_v1.py` | this SIS |
-| Bolt.new | Standart | web prototype v1 (stage B) | `web/original/` | this SIS |
+| Bolt.new | not displayed      | web prototype v1 (stage B) | `web/original/` | this SIS |
 | Gemini   | Gemini 3.8 flash   | critique (stage C) | `report.md`, `code/booking.py` | this SIS |
-| Bolt.new | Standart           | repair (stage D) | `web/final/` | this SIS |
+| Bolt.new | not displayed      | repair (stage D) | `web/final/` | this SIS |
 
 **The assistant wrote, or helped write, my tests in `code/`:** yes
 The assistant helped generate the boilerplates and test methods for `code/test_booking.py` (T1 through T11). I independently verified every expected value against the written specifications of AC1–AC5 rather than relying on what the initial code returned; specifically, I ensured T1 expects `True` according to AC4's touch rule despite the AI's v1 code returning `False`.
