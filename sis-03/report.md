@@ -81,17 +81,39 @@
 
 | Branch in v1 (quoted) | AC | Satisfies it? | Why |
 | --- | --- | --- | --- |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
+| `if blocked:` | AC3 | Yes | Directly checks the boolean flag and immediately rejects requests when the room is blocked. |
+| `if not (0 <= start < end <= 1440):` | AC1 | Yes | Validates that boundaries are within 0 and 1440 minutes, and that start is strictly before end. |
+| `if start <= now:` | AC1 | Yes | Guarantees the booking starts strictly in the future relative to the current minute. |
+| `if (end - start) > 120:` | AC2 | Yes | Enforces the maximum booking duration threshold of 120 minutes while allowing exactly 120. |
+| `if start <= ex_end and end >= ex_start:` | AC4 | No | Uses non-strict inequalities `<=`, causing valid back-to-back bookings touching at endpoints to be falsely flagged as conflicts. |
 
 ## 4. Prototype v1 in Bolt.new
 
 **Prompt as sent:**
 
 ~~~~text
-(paste here)
+Build a single-page responsive Smart Campus Room Availability Checker in React with Tailwind CSS.
+
+User story:
+As a student, I want to check a room's availability so that I can choose a valid booking time.
+
+Acceptance Criteria (AC1-AC6):
+- AC1: Time is handled in minutes from midnight (0 <= start < end <= 1440). Start time must be strictly after the current time "now".
+- AC2: Duration must be at most 120 minutes (end - start <= 120). Exactly 120 minutes is permitted.
+- AC3: Reject booking if the room is marked as blocked (blocked == true).
+- AC4: Reject overlap with existing bookings. Touching at an endpoint (e.g. 11:00-12:00 when 10:00-11:00 is booked) is NOT an overlap and must be allowed.
+- AC5: Display unambiguous "Available" or "Unavailable" status with clear visual indicator. Never create, confirm, or mutate existing bookings.
+- AC6: Display clear, understandable validation error messages. The UI layout must be fully responsive and usable on narrow mobile screens (~375px).
+
+Strict Constraints & Exclusions:
+- Strictly NO authentication or login screens.
+- Strictly NO backend server, external APIs, or persistent databases.
+- Read-only availability check only: do NOT implement booking submission, confirmation modals, or payment processing.
+
+Initial UI State:
+- Baseline settings: "now" set to 09:00 (540 min), room blocked = false.
+- Display one pre-configured fictional booking: 10:00 - 11:00 (600 - 660 min).
+- Form inputs for proposed Start Time and End Time, a toggle for Room Blocked status, and an explicit "Check Availability" button with immediate feedback.
 ~~~~
 
 <!-- Main generated files or components, with their path inside web/original/
@@ -99,12 +121,15 @@
 
 | Generated file or component | Path | Its role |
 | --- | --- | --- |
-| (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) |
+| `App.tsx` | `src/App.tsx` | Main application component containing time input controls, room status toggle, availability checking logic, and status badge rendering. |
+| `RoomSchedule.tsx` | `src/components/RoomSchedule.tsx` | Component rendering the list of fictional existing room reservations and current time reference. |
 
 **What v1 does:**
 
-- (write here)
+- Renders a single-page availability checker interface displaying the room name, current reference time (09:00), and existing bookings (10:00–11:00).
+- Provides time input pickers for Start Time and End Time alongside a toggle switch for Room Blocked status.
+- Evaluates booking intervals against duration limits (max 120 min) and existing reservations upon clicking "Check Availability".
+- Displays an "Available" (green) or "Unavailable" (red) status banner with contextual validation messages explaining rejection reasons.
 
 ## 5. Test cases — executed on both artifacts
 
