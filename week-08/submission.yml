@@ -1,0 +1,58 @@
+# week-08/submission.yml — your declaration for this lab.
+#
+# Facts only. Every explanation goes in lab-report.md; nothing here repeats prose.
+# Fill every value. Check it before you push:
+#
+#     python tests/validate_submission.py
+#
+# The validator checks shape, never quality. A green run is the floor, not the grade.
+# If you cannot run Python, fill the file by hand against the comments — a malformed
+# file costs you nothing if the content is there.
+
+schema: 1
+week: "08"
+
+student:
+  name: Ali Akhmetov
+  student_id: 25B032081
+  github: aliakhmetov01
+
+assistant:
+  tool: Gemini
+  model: Gemini 3.8 Flash
+
+skill:
+  environment: prompt-only
+  invoked: not-shown
+
+project:
+  language: ts
+  vitest: 2.1.9
+
+counts:
+  tests_final: 19
+  buggy_failed: 3
+  defects_logged: 2
+  lines_changed: 2
+
+checker:
+  pass: 31
+  fail: 0
+  error: 0
+  commit: aa68464
+  known_fails: []
+
+verdict:
+  skill_helped: yes
+
+review_findings:
+  - "BUG-A: touching endpoints in T01 were falsely identified as collisions due to non-strict inequality checks."
+  - "BUG-B: the AC5 purity requirement was violated by canBook invoking bookings.push directly on the input array."
+  - "Regression: T01 and T08 failed alongside the BUG-A test until the comparison was updated to start < b.end."
+  - "Procedure: Step 5 of SKILL.md prevented premature full-function rewrites by enforcing minimal patch proposals."
+
+honesty:
+  buggy_function_pasted_unchanged: yes
+  same_input_both_chats: yes
+  outputs_unedited: yes
+  ai_usage_disclosed: yes
