@@ -1,0 +1,61 @@
+@startuml
+skinparam style strictuml
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Student" as student
+box "System Boundary"
+    participant "RegistrationController" as controller
+    participant "Catalog" as catalog
+    participant "offering : CourseOffering" as offering
+    participant "enrollment : Enrollment" as enrollment
+end box
+
+== Catalog Browsing (US-01 / R1) ==
+
+student -> controller : browseCatalog(semester)
+activate controller
+
+controller -> catalog : getOfferings(semester)
+activate catalog
+
+catalog --> controller : offeringList
+deactivate catalog
+
+controller --> student : displayOfferings(code, title, offeringId, availablePlaces)
+deactivate controller
+
+== Course Registration (US-02 & US-03 / R2, R3, R4, R5) ==
+
+student -> controller : register(studentId, offeringId)
+activate controller
+
+controller -> offering : registerStudent(studentId)
+activate offering
+
+group Critical Section [Atomic Check & Enrollment]
+    alt [already enrolled (R3, R5)]
+        offering --> controller : reject("already enrolled")
+        controller --> student : showRejection("already enrolled")
+
+    else [offering full: availablePlaces == 0 (R2, R5)]
+        offering --> controller : reject("course full")
+        controller --> student : showRejection("course full")
+
+    else [availablePlaces > 0 and not already enrolled (R2, R3, R4)]
+        create enrollment
+        offering -> enrollment : new(studentId, offeringId)
+        activate enrollment
+        enrollment --> offering : enrollmentInstance
+        deactivate enrollment
+
+        offering -> offering : decrementAvailablePlaces()
+        offering --> controller : confirm(enrollmentId)
+        controller --> student : showConfirmation(enrollmentId)
+    end
+end
+
+deactivate offering
+deactivate controller
+
+@enduml
