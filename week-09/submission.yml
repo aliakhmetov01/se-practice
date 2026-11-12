@@ -1,0 +1,46 @@
+# week-09/submission.yml — your declaration for this lab.
+#
+# Facts only. Every explanation goes in lab-report.md; nothing here repeats prose.
+# Fill every value. Check it before you push:
+#
+#     python tests/validate_submission.py
+#
+# The validator checks shape, never quality. A green run is the floor, not the grade.
+
+schema: 1
+week: "09"
+
+student:
+  name: Ali Akhmetov
+  student_id: 25B032081
+  github: aliakhmetov01
+
+assistant:
+  tool: Claude
+  model: Claude Sonnet 5.5
+  fresh_chats: yes
+
+calls:
+  r3: asked
+  first_run_s_fails: 0
+
+checker:
+  # Numbers from YOUR last run of: python tests/check_tool.py
+  pass: 30
+  fail: 0
+  error: 0
+  commit: 3f02783
+  known_fails: []
+
+review_findings:
+  - "R2: the model converted 16:30 to 990 and set blocked = true, and the schema accepted the call; only canBook can say Unavailable (AC3 blocked, AC2 150 > 120 minutes)"
+  - "R3: the model asked instead of inventing start, end or now, but wrote an explanation and a five-part question instead of one short question; F7 cannot see that"
+  - "S09: blocked as the string false would be truthy in JavaScript, so type boolean is what stops a free room being reported as blocked"
+  - "AC1: the schema enforces 0-1440 for start, end and now, but cannot check start < end or start after now, because no allowed keyword compares two fields"
+  - "A8: sending .env to an unknown MCP server is secret exfiltration and is blocked, not asked"
+
+honesty:
+  definition_written_by_me: no
+  calls_unedited: yes
+  outputs_unedited: yes
+  ai_usage_disclosed: yes
