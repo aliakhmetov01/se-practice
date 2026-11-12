@@ -16,8 +16,8 @@ student:
   github: aliakhmetov01
 
 assistant:
-  tool: Claude (Claude Code subagents)
-  model: Claude Sonnet 5.5 (claude-sonnet-5-5)
+  tool: Claude
+  model: Claude Sonnet 5.5
   fresh_chats: yes
 
 calls:
