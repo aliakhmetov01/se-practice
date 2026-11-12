@@ -1,0 +1,7 @@
+I did not call check_room. The request doesn't give enough information to fill the required arguments:
+
+- It says "tomorrow", but the tool only checks slots for today.
+- "Afternoon" and "a couple of hours" are not exact start and end times.
+- The current time, whether the room is blocked, and the list of existing bookings are all missing.
+
+The question I'd put to the user: What exact start and end time do you want for today, what is the current time, is the room blocked, and what bookings already exist? If they really want tomorrow, this tool can't check it.
