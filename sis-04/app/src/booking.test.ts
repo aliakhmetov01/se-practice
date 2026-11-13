@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { canBook } from './booking';
-import { describe, it, test, expect } from 'vitest';
 describe('canBook - First Suite', () => {
   const defaultFixture = {
     now: 540,
@@ -8,7 +7,7 @@ describe('canBook - First Suite', () => {
     bookings: [{ start: 600, end: 660 }],
   };
 
-  it('T01 AC4: 660-720 touching after', () => {
+  it('T01 B3 AC4: 660-720 touching after', () => {
     const result = canBook({
       ...defaultFixture,
       start: 660,
@@ -53,7 +52,7 @@ describe('canBook - First Suite', () => {
     expect(result).toBe(false);
   });
 
-  it('T06 AC2: 720-840 (120 min)', () => {
+  it('T06 B1 AC2: 720-840 (120 min)', () => {
     const result = canBook({
       ...defaultFixture,
       start: 720,
@@ -62,7 +61,7 @@ describe('canBook - First Suite', () => {
     expect(result).toBe(true);
   });
 
-  it('T07 AC2: 720-841 (121 min)', () => {
+  it('T07 B2 AC2: 720-841 (121 min)', () => {
     const result = canBook({
       ...defaultFixture,
       start: 720,
@@ -80,7 +79,7 @@ describe('canBook - First Suite', () => {
     expect(result).toBe(true);
   });
 
-  it('T09 AC4: 630-690 partial overlap', () => {
+  it('T09 B4 AC4: 630-690 partial overlap', () => {
     const result = canBook({
       ...defaultFixture,
       start: 630,
