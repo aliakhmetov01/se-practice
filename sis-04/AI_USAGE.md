@@ -42,5 +42,5 @@ why each module exists:** yes / no
 **Anything I accepted from the AI without fully understanding it:**
 <!-- Name the file and the line. An honest entry here costs far less than a blank one that turns out to be untrue. -->
 
-Signed: <your name>
+Signed: Ali Akhmetov
 Date:

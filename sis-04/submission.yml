@@ -14,9 +14,9 @@ schema: 1
 assignment: "sis-04"            # do not edit
 
 student:
-  name:                         # as in the university register
-  student_id:                   # e.g. 00X000000
-  group:                        # your group code, as in the timetable
+  name: "Ali Akhmetov"          # as in the university register
+  student_id: "25B032081"       # e.g. 00X000000
+  group: "monday 16:00-19:00"   # your group code, as in the timetable
   github: aliakhmetov01         # username only, not a URL
 
 assistant:
