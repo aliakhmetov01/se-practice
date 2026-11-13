@@ -1,7 +1,4 @@
-export interface Booking {
-  start: number;
-  end: number;
-}
+import type { Booking } from './rooms';
 
 export interface CanBookParams {
   start: number;
