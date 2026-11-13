@@ -1,4 +1,4 @@
-import type { Booking } from './rooms';
+import type { Booking, Room } from './rooms';
 
 export interface CanBookParams {
   start: number;
@@ -18,4 +18,18 @@ export function canBook({ start, end, now, blocked, bookings }: CanBookParams): 
   }
 
   return true;
+}
+
+/**
+ * F3, F5: the availability of ONE room from the catalog. It finds the room by id and asks canBook
+ * with that room's own blocked status and bookings. An unknown id is not available. Reads only (AC5).
+ */
+export function checkRoom(
+  rooms: Room[],
+  roomId: string,
+  { start, end, now }: { start: number; end: number; now: number },
+): boolean {
+  const room = rooms.find(r => r.id === roomId);
+  if (!room) return false;
+  return canBook({ start, end, now, blocked: room.blocked, bookings: room.bookings });
 }
