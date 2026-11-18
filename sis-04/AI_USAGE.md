@@ -37,10 +37,10 @@ before `checkRoom` / `filterRooms` existed.
 **I shared no credentials, keys or private data with any tool:** yes
 
 **Everything I submitted, I can explain and defend in class — including filterRooms, checkRoom and
-why each module exists:** yes / no
+why each module exists:** yes
 
 **Anything I accepted from the AI without fully understanding it:**
 <!-- Name the file and the line. An honest entry here costs far less than a blank one that turns out to be untrue. -->
 
 Signed: Ali Akhmetov
-Date:
+Date: 18-11-2026
