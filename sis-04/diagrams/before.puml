@@ -1,0 +1,24 @@
+' diagrams/before.puml - the modules of the STARTING POINT (baseline commit 434921c, week-08 app).
+' One box per module, one arrow per import.
+@startuml
+title Before - week-08 app (baseline)
+
+package "app/src" {
+  component "main.tsx" as Main
+  component "App.tsx\n(type Room, type Interval, const ROOMS (2 rooms),\ntoMinutes(), fmt(), check(), the whole page)" as App
+  component "booking.ts\n(interface Booking, interface CanBookParams,\ncanBook)" as Booking
+  component "booking.test.ts\n(19 tests on canBook)" as BookingTest
+  component "index.css" as Css
+}
+
+Main --> App : import App
+Main --> Css : import './index.css'
+App --> Booking : canBook()
+BookingTest --> Booking : canBook()
+
+note right of App
+  Room data, time parsing, form validation,
+  the page-level "Room blocked" checkbox
+  and all rendering live in one file.
+end note
+@enduml

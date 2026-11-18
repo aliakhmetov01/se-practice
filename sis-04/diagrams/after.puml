@@ -1,0 +1,51 @@
+' diagrams/after.puml - the modules of the FINAL code. One box per module or component,
+' one arrow per import.
+@startuml
+title After - room catalog, rules, filter and UI apart
+
+package "data" {
+  component "rooms.ts\n(Booking, Room, ROOMS (5 rooms),\nEQUIPMENT, DEMO_NOW)" as Rooms
+}
+
+package "rules" {
+  component "booking.ts\n(CanBookParams, canBook AC1-AC5,\ncheckRoom F3/F5)" as Booking
+  component "filter.ts\n(filterRooms F1/F2)" as Filter
+}
+
+package "UI" {
+  component "main.tsx" as Main
+  component "App.tsx\n(page state only)" as App
+  component "components/RoomFilter.tsx" as RoomFilter
+  component "components/RoomList.tsx\n(F4 empty state)" as RoomList
+  component "components/ResultMessage.tsx" as ResultMessage
+  component "time.ts\n(toMinutes, fmt, END_OF_DAY)" as Time
+  component "index.css" as Css
+}
+
+package "tests" {
+  component "booking.test.ts\n(19: AC1-AC5, B1-B4)" as BookingTest
+  component "checkRoom.test.ts\n(5: F3, F5, AC5, B3)" as CheckRoomTest
+  component "filter.test.ts\n(9: F1, F2, F4, B5, B6, AC5, INT)" as FilterTest
+}
+
+Main --> App : import App
+Main --> Css
+App --> Booking : checkRoom()
+App --> Filter : filterRooms()
+App --> Rooms : ROOMS, EQUIPMENT, DEMO_NOW
+App --> Time : toMinutes(), fmt(), END_OF_DAY
+App --> RoomFilter
+App --> RoomList
+App --> ResultMessage
+RoomList ..> Rooms : type Room
+ResultMessage ..> Rooms : type Room
+ResultMessage --> Time : fmt()
+Booking ..> Rooms : type Booking, Room
+Filter ..> Rooms : type Room
+BookingTest --> Booking : canBook()
+CheckRoomTest --> Booking : checkRoom()
+CheckRoomTest ..> Rooms : type Room
+FilterTest --> Filter : filterRooms()
+FilterTest --> Booking : checkRoom()
+FilterTest ..> Rooms : type Room
+@enduml
