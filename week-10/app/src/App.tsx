@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { canBook } from './booking';
+import { checkRequest } from './booking';
 
 type Interval = { start: number; end: number };
 type Room = { id: string; name: string; blocked: boolean; bookings: Interval[] };
@@ -9,10 +9,6 @@ const ROOMS: Room[] = [
   { id: 'b204', name: 'Room B-204', blocked: false, bookings: [] },
 ];
 
-const toMinutes = (value: string) => {
-  const [h, m] = value.split(':').map(Number);
-  return h * 60 + m;
-};
 const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
 export default function App() {
@@ -28,30 +24,9 @@ export default function App() {
   const room = ROOMS.find(r => r.id === roomId)!;
 
   function check() {
-    setResult(null);
-    if (!start || !now || (!end && !endOfDay)) {
-      setError('Fill in the current time, the start and the end.');
-      return;
-    }
-    const s = toMinutes(start);
-    const e = endOfDay ? 1440 : toMinutes(end);
-    const n = toMinutes(now);
-    if (!(s < e)) {
-      setError('The end time must be after the start time.');
-    } else {
-      setError('');
-    }
-
-    // Вызываем вынесенную чистую функцию canBook
-    const ok = canBook({
-      start: s,
-      end: e,
-      now: n,
-      blocked,
-      bookings: room.bookings,
-    });
-
-    setResult(ok);
+    const outcome = checkRequest({ now, start, end, endOfDay, blocked, bookings: room.bookings });
+    setError(outcome.error);
+    setResult(outcome.result);
   }
 
   return (
