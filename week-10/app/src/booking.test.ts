@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { canBook } from './booking';
+import { canBook, checkRequest } from './booking';
 import { describe, it, test, expect } from 'vitest';
 describe('canBook - First Suite', () => {
   const defaultFixture = {
@@ -197,5 +197,19 @@ describe('Practice 08: Bug Reproduction', () => {
 
     expect(result).toBe(true);
     expect(bookings).toEqual(bookingsCopy);
+  });
+});
+
+describe('Week 10: regression tests named after a risk', () => {
+  it('R2 AC1/AC6: a reversed interval gives one error and no Available/Unavailable verdict', () => {
+    const outcome = checkRequest({
+      now: '09:00',
+      start: '12:00',
+      end: '11:00',
+      endOfDay: false,
+      blocked: false,
+      bookings: [{ start: 600, end: 660 }],
+    });
+    expect(outcome).toEqual({ error: 'The end time must be after the start time.', result: null });
   });
 });
