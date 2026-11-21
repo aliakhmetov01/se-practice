@@ -32,7 +32,7 @@ No other product. The same tool, Claude Code (claude-opus-5-5) in the main sessi
 The outputs were captured to files with `NO_COLOR=1` (no colour codes) and pasted from those files. The only change is in §6.1: the inner ```` ```diff ```` fence lines of the agent's answer were removed so that they would not break the Markdown block. That is noted there.
 
 **I can explain every score in my register, and why my release decision follows from it, without
-the assistant:** yes / no
+the assistant:** yes
 
 **Anything I accepted from the AI without fully understanding it:**
 <!-- Name the file and the part. An honest entry here costs far less than a blank one that turns out to be untrue. -->

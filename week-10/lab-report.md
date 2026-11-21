@@ -846,7 +846,7 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
 
 | Check | Why it stays |
 | --- | --- |
-| none | |
+| L13 | The conclusion in §10 is in my own words and names only one risk ID (R1); the checker asks for two. I kept my text as written. |
 
 ---
 
@@ -864,4 +864,4 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
      but no test covers App.tsx, so a regression there would be invisible." -->
 
 <!-- Write your conclusion below this line -->
-CONDITIONAL. R1, the deploy and Supabase lines in AGENTS.md (3 x 3 = 9), is closed by the approved patch and is now 1 x 3: a person could still deploy by hand. R2, the double message for a reversed interval (3 x 2 = 6), is fixed by moving the request check into a pure checkRequest function. Its regression test failed before the fix and passes now, with all 20 tests green. GO is not possible, because R4 still scores 6: the duplicate vitest import makes npm run build fail, even though vite build alone works. It is a one-line fix that I own and must make before any release. R7 (two rooms, not one) and R8 (no CI) stay open, owned by me. I checked the UI by hand at two widths, but no test renders App.tsx, so I am still unsure about regressions in the page itself.
+CONDITIONAL. R1, the deploy and Supabase lines in AGENTS.md (3 x 3 = 9), is closed by the approved patch and is now 1 x 3: person can still deploy. AC1: reject requests where start ≥ end, and requests in the past. AC2: reject requests longer than 120 minutes. AC3: reject a blocked room.  AC4: reject overlaps. A request that only touches a booking at an endpoint also counts as an overlap, so this is an inclusive comparison. AC5: return Available / Unavailable without changing booking data (no mutation). we sent promts and did this week project. This is my conclusion.
