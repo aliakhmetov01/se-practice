@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { canBook, checkRequest } from './booking';
-import { describe, it, test, expect } from 'vitest';
 describe('canBook - First Suite', () => {
   const defaultFixture = {
     now: 540,
