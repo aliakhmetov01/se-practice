@@ -1,0 +1,67 @@
+# week-11/submission.yml — your declaration for this lab.
+#
+# Facts only. Every explanation goes in lab-report.md; nothing here repeats prose.
+#
+#     python tests/validate_submission.py
+
+schema: 1
+week: "11"
+
+student:
+  name: Ali Akhmetov
+  student_id: 25B032081
+  github: aliakhmetov01
+
+assistant:
+  tool: Claude Code
+  model: claude-opus-5-5
+  environment: claude-code
+
+reviewer:
+  tool: Claude Code (Explore sub-agent, read-only)
+  model: claude-sonnet-5-5
+  same_model_as_builder: no
+
+project:
+  starting_point: week-10
+  baseline_commit: 0fafea2
+  language: ts
+  vitest: 2.1.9
+
+feature:
+  adapter: mock
+  timeout_ms: 2000
+  prompt_chosen: B
+
+counts:
+  tests_baseline: 20
+  tests_final: 35
+  cases_run: 9
+  findings_verified: 9
+  findings_confirmed: 6
+
+decision:
+  fixed: [V2, V1]
+  demo_ready: yes
+
+checker:
+  # Run on a clean export of the commit (git archive), i.e. without the untracked app/node_modules/.
+  pass: 27
+  fail: 0
+  error: 0
+  commit: 90f7e43
+  known_fails: []
+
+review_findings:
+  - "V2: the reviewer called invented times a hypothesis; '11 o'clock' and '10-11' passed validateOutput - confirmed by three V2 tests that failed before the fix (F2)"
+  - "V1: npm run build failed on the duplicate vitest import in booking.test.ts (TS2300) - confirmed, fixed by removing line 3, build passes"
+  - "V7: the reviewer said validateInput rejects extra fields; explain.ts drops them and returns generated - unsupported"
+  - "V5: after Check, editing the times leaves the old Available status and explanation in App.tsx - confirmed on the page, not fixed"
+  - "V4: an invented person ('Professor Smith booked it') passes validateOutput in explain.ts - confirmed by a probe, still open"
+
+honesty:
+  changes_reviewed_by_me: yes
+  no_key_in_browser: yes
+  review_was_read_only: yes
+  outputs_unedited: yes
+  ai_usage_disclosed: yes
