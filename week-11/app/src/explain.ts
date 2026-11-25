@@ -148,11 +148,15 @@ export function validateOutput(raw: unknown, input: ExplainInput): string | null
     return null;
   }
 
-  // Names no time the request does not contain.
+  // Names no time and no number the request does not contain (F2).
   const allowed = new Set([input.start, input.end]);
   if (input.start === '00:00' || input.end === '24:00' || input.start === '24:00') allowed.add('midnight');
   if (input.end === '24:00') allowed.add('00:00');
   if (timesIn(body).some(t => !allowed.has(t))) return null;
+  // Any other number ("11 o'clock", "10-11", "2 hours") is a detail the request does not contain.
+  // Only the request's own times and the 120-minute rule may appear as digits.
+  const withoutKnown = [input.start, input.end, '120'].reduce((s, known) => s.split(known).join(' '), body);
+  if (/\d/.test(withoutKnown)) return null;
 
   return explanation;
 }

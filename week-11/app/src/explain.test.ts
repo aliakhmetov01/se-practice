@@ -123,3 +123,32 @@ describe('Week 11: explain availability, E1-E9', () => {
     expect(out.kind).toBe('fallback');
   });
 });
+
+describe('Week 11: regression tests named after a review finding', () => {
+  async function expectFallback(text: string) {
+    const inventor: ExplainAdapter = async () => ({ explanation: text });
+    const input = decide('10:30', '11:30');
+    const out = await explainAvailability(input, inventor, 2000);
+    expect(out).toEqual({ kind: 'fallback', explanation: fallbackExplanation(input), cause: 'invalid_output' });
+  }
+
+  test("V2 F2: an answer naming 11 o'clock, a time the request does not contain, is replaced by the fallback", async () => {
+    await expectFallback("Room A-101 is unavailable because a booking runs until 11 o'clock.");
+  });
+
+  test('V2 F2: an answer naming a bare-hour range 10-11 is replaced by the fallback', async () => {
+    await expectFallback('Room A-101 is not available, it is booked 10-11.');
+  });
+
+  test('V2 F2: an answer inventing a duration and a start hour is replaced by the fallback', async () => {
+    await expectFallback('Room A-101 is unavailable because it is booked for 2 hours from 10.');
+  });
+
+  test('V2 F2: the mock still passes the output check for all six reason codes', async () => {
+    for (const [start, end, blocked] of [['11:00', '12:00', false], ['10:30', '11:30', false], ['11:00', '12:00', true],
+      ['12:30', '12:00', false], ['08:00', '08:30', false], ['11:00', '13:30', false]] as const) {
+      const out = await explainAvailability(decide(start, end, blocked), mockAdapter, 2000);
+      expect(out.kind).toBe('generated');
+    }
+  });
+});
