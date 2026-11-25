@@ -1,0 +1,8 @@
+# Generated: recreated by `npm ci` and `npm run build`; never committed (AGENTS.md).
+node_modules/
+dist/
+
+# Secrets: never committed (AGENTS.md, Forbidden actions). A shareable template may be committed.
+.env
+.env.*
+!.env.example
