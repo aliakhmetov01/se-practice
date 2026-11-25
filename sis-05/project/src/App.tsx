@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { checkRoom } from './booking';
 import { filterRooms } from './filter';
 import { DEMO_NOW, EQUIPMENT, ROOMS } from './rooms';
-import { END_OF_DAY, fmt, toMinutes } from './time';
+import { fmt } from './time';
+import { toAttendees, toRequest, type TimeRequest } from './form';
 import { RoomFilter } from './components/RoomFilter';
 import { RoomList } from './components/RoomList';
 import { ResultMessage } from './components/ResultMessage';
-
-type Request = { start: number; end: number };
 
 export default function App() {
   const [attendees, setAttendees] = useState('1');
@@ -16,11 +15,11 @@ export default function App() {
   const [start, setStart] = useState('11:00');
   const [end, setEnd] = useState('12:00');
   const [endOfDay, setEndOfDay] = useState(false);
-  const [request, setRequest] = useState<Request | null>(null);
+  const [request, setRequest] = useState<TimeRequest | null>(null);
   const [error, setError] = useState('');
 
   // F1, F2: the list comes from filterRooms; the page adds no rule of its own.
-  const visible = filterRooms(ROOMS, { attendees: Number(attendees) || 0, equipment });
+  const visible = filterRooms(ROOMS, { attendees: toAttendees(attendees), equipment });
   // A room hidden by the filter is no longer selected, so no result is shown for it.
   const selected = visible.find(r => r.id === roomId) ?? null;
   // F3, F5: recomputed on every render for the selected room with the last submitted times.
@@ -38,19 +37,16 @@ export default function App() {
     };
   }
 
+  // The form's strings become minutes in src/form.ts; the page only shows the outcome.
   function check() {
-    if (!start || (!end && !endOfDay)) {
-      setError('Fill in the start and the end time.');
-      setRequest(null);
-      return;
-    }
-    if (!selected) {
-      setError('Choose a room from the list first.');
+    const read = toRequest({ start, end, endOfDay, roomChosen: selected !== null });
+    if ('error' in read) {
+      setError(read.error);
       setRequest(null);
       return;
     }
     setError('');
-    setRequest({ start: toMinutes(start), end: endOfDay ? END_OF_DAY : toMinutes(end) });
+    setRequest(read.request);
   }
 
   return (
