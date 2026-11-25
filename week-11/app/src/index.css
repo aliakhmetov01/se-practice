@@ -8,6 +8,15 @@ button { margin-top: 1rem; padding: 0.6rem 1.2rem; border: 0; border-radius: 8px
 .available { color: #2f8f84; }
 .unavailable { color: #c0392b; }
 .error { color: #c0392b; margin-top: 0.75rem; }
+button:disabled { opacity: 0.6; }
+button.secondary { background: white; color: #16233a; border: 1px solid #16233a; }
+.explain { margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid #dde3ea; }
+.explain-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.explain-controls button { margin-top: 0; }
+.explain-controls label.inline { display: flex; align-items: center; gap: 0.25rem; font-size: 0.9rem; }
+.explanation { margin-top: 0.75rem; padding: 0.75rem 1rem; border-left: 4px solid #8a96a8; background: #f5f7fa; border-radius: 0 8px 8px 0; }
+.explanation p { margin: 0; }
+.explanation .explanation-label { margin-bottom: 0.35rem; font-size: 0.8rem; font-style: italic; color: #5a6678; }
 @media (max-width: 480px) {
   .page { margin: 0; border-radius: 0; }
   .row { flex-direction: column; }
