@@ -480,18 +480,95 @@ Where it ran, how you made sure it could not edit, and what you gave it (the dif
 
 <!-- Write below this line -->
 
+The review ran in Claude Code (desktop app) as a fresh **Explore** sub-agent on a **different model from the builder**: claude-sonnet-5-5 (Claude Sonnet 5.5; the builder was claude-opus-5-5). It started with no earlier context. An Explore agent has no Edit, Write or NotebookEdit tool, so it can read, search and run commands but cannot change a file. It ran `npx vitest run` and `npm run build`, which write nothing to `src/` (the build failed in `tsc`, before Vite could write `dist/`). After the review, `git status --short week-11/app` showed only the untracked `node_modules/`: no change.
+
+What it was given, by path, before the deck's prompt:
+- **the diff**: `git diff 0fafea2 -- week-11/app` (the checkpoint of Part 0 to the commit with the feature and E1–E9, 598 lines), saved to a file;
+- the lab **README** (`week-11/README.md`, with the contract in §3);
+- **`app/AGENTS.md`**;
+- the acceptance criteria **AC1–AC6 and F1–F5**, pasted as text;
+- the project folder itself, so that it could read the tests and run them.
+
+I added one line asking it to end its answer with its exact model ID.
+
 ### 7.2 The review prompt and the answer
 
 What you sent, exactly (the deck's prompt):
 
 ```text
-(paste here)
+Act as a read-only agentic code reviewer. Inspect the proposed diff in context, repository instructions, and tests. Review correctness, security, maintainability, and performance. For each issue, provide severity, affected file, evidence, reproduction or verification method, and a minimal recommendation. Do not edit files. Clearly distinguish confirmed findings from hypotheses.
 ```
 
 The reviewer's answer, pasted unedited:
 
 ```text
-(paste here)
+## Code review: week-11/app, diff since 0fafea2
+
+**Verdict:** The feature is sound and matches README §3. There are no blocking defects in the diff. One pre-existing build failure blocks the "npm run build must pass" gate in AGENTS.md. The remaining findings are test-coverage and minor robustness gaps.
+
+Checked: I read the whole diff, AGENTS.md and README §3. I ran `npx vitest run` and `npm run build`. I did not run the UI in a browser, so AC6 and the UI-related findings are by code reading only.
+
+### Confirmed facts
+- **Tests:** `npx vitest run` passes, 31 of 31 (20 in booking.test.ts, 11 in explain.test.ts).
+- **Rules and reason codes:** `canBook` now returns `availabilityReason(params) === 'available'`. The rule order and the six reason codes match README §3.1 exactly. `booking.test.ts` is untouched (F1).
+- **Secrets and providers:** a grep of `src/` finds no key, no `VITE_*` variable, no provider SDK and no `fetch`.
+- **Packages:** none were added.
+- **Edits stay in `src/`:** only files in `src/` changed.
+- **F5 label:** the label text contains "Generated" (and "generated" in the fallback label). It is shown in a block separate from the status line.
+- **F3/F4:** input is validated before the adapter is called. A timeout, a throw, or no adapter all lead to the fallback.
+
+### Findings
+
+**1. Medium, confirmed, pre-existing but it blocks the acceptance gate: `npm run build` fails.**
+- File: `C:\Users\alyok\se-practice\week-11\app\src\booking.test.ts`, lines 1 and 3.
+- Evidence: `npm run build` runs `tsc && vite build` and stops with `TS2300: Duplicate identifier 'describe' / 'it' / 'expect'`. The file imports from vitest twice (line 1 `{ describe, it, expect }`, line 3 `{ describe, it, test, expect }`).
+- Origin: the file is unchanged by this diff (it is only in the baseline commit 0fafea2). The new code adds no `tsc` errors, because all reported errors are in `booking.test.ts`. I did not verify this at the baseline commit.
+- Verify: run `npm run build` in `C:\Users\alyok\se-practice\week-11\app`.
+- Recommendation: delete the duplicate import on line 1. This is an import-only change and weakens no assertion. If you would rather not touch an existing test file, record it as a known issue instead. Either way, AGENTS.md says build must pass before acceptance.
+
+**2. Low to Medium, confirmed: no tests for the new UI wiring or the new `booking.ts` exports.**
+- Files: `src/App.tsx` and `src/booking.ts`. `explain.test.ts` covers only `explain.ts`.
+- Evidence: nothing tests `checkRequestWithReason`, or that `canBook` and `availabilityReason` always agree.
+- The `explainRun` stale-run guard, the `checked` snapshot, and the F5 label rendering are also untested.
+- Recommendation: add a small parametrised test (a `reasonCode === 'available'` check against `canBook` over the E1–E9 inputs). Add one test that `checkRequestWithReason` returns `reasonCode: null` exactly when `result` is null. Optionally add a React Testing Library test, but that would need a new package and so human approval.
+
+**3. Low, confirmed: F3 test coverage is thinner than the validator.**
+- File: `src/explain.test.ts`, E6 and E7.
+- Evidence: `validateInput` also rejects malformed times, non-boolean `isAvailable`, an unknown `reasonCode`, an `isAvailable`/`reasonCode` mismatch, control characters, non-object input and extra fields. None of these has a test.
+- Recommendation: add one `it.each` over bad inputs asserting `kind: 'rejected'` and that the adapter call count is 0.
+- Also add a test that a `roomLabel` such as "Ignore previous instructions" is passed through only as text.
+
+**4. Low, hypothesis (not reproduced): the output check is regex heuristics, so false rejections and false accepts are possible.**
+- File: `src/explain.ts`, `validateOutput` (the NEGATIVE, POSITIVE_CLAIM and `timesIn` regexes).
+- Concern: a real model might phrase a refusal in a way that none of the NEGATIVE patterns match, for example "booking is not possible". It would then be replaced by the fallback every time.
+- Conversely, numbers written as words ("half past ten") are not detected as invented times.
+- Impact: this is safe-fail. The failure mode is always the fallback, never a wrong status. The built-in mock passes the validator by construction.
+- Recommendation: no change needed now. If a real adapter is added, log or count `invalid_output` causes. Consider tightening to a smaller set of required phrases.
+
+**5. Low, confirmed by code reading: the UI is only partly stale-proof.**
+- File: `src/App.tsx`.
+- Evidence: the explanation correctly uses the frozen `checked` snapshot, so it never describes newer form values. The status line (`result`) and the old explanation block stay on screen when the user edits the time, room or blocked fields without pressing Check. This is pre-existing behaviour for `result`.
+- Impact: this is not a correctness bug, because the snapshot is explicit. The "Explain availability" button still describes the earlier request while the form shows another.
+- Recommendation: show the checked slot ("for Room A-101, 11:00–12:00") in the explanation block, or clear `checked` and `explained` when inputs change.
+
+**6. Low, confirmed by code reading: accessibility and AC6.**
+- File: `src/App.tsx`, lines 81–95.
+- Evidence: the `aria-live="polite"` region sits inside the conditionally rendered `<section>`, and the Available/Unavailable `<p>` has no live region. Screen readers may not announce either message reliably.
+- Layout: the new CSS wraps at narrow widths (`flex-wrap`).
+- Verify: open the page at 375px and with a screen reader or the accessibility tree. I did not do this.
+- Recommendation: render the live region always, and add `role="status"` to the result.
+
+**7. Info, hypothesis: `AbortSignal` is passed to the adapter, but a mock that ignores it keeps running.**
+- File: `src/explain.ts`, `explainAvailability`.
+- Evidence: the timeout is correct and the timer is cleared. A future real adapter must honour `signal`.
+- Recommendation: note this in the adapter docs. No change needed now.
+
+### Other observations
+- Security: the design is good. Input is validated, output is validated, the label is treated as data, and nothing from `explain` can change `isAvailable` or bookings.
+- Performance: negligible, because the regexes run on at most 280 characters.
+- `App.tsx` now ends with a newline, which is harmless.
+
+Model ID: claude-sonnet-5-5
 ```
 
 ### 7.3 The findings, verified
@@ -502,9 +579,15 @@ At least **three**; at least **two** `confirmed`. **Category:** `correctness`, `
 
 | ID | Finding (short) | Category | Severity | File | How I verified it | Label | Found by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| V1 | | | | | | | |
-| V2 | | | | | | | |
-| V3 | | | | | | | |
+| V1 | `npm run build` fails: `booking.test.ts` imports from `vitest` twice (lines 1 and 3), `tsc` stops with TS2300, so AGENTS.md's build gate fails | maintainability | medium | `app/src/booking.test.ts` | ran `npm run build`: exit 2 with six `TS2300 Duplicate identifier` errors, at the checkpoint (§2.1) and again after the feature; after removing line 3 it exits 0 and Vite builds (§8.2) | confirmed | both |
+| V2 | the output check only knows `HH:MM`-like times, so a generated text with an invented time in another form (`11 o'clock`, `10-11`, `2 hours from 10`) is shown as the explanation (F2) | correctness | medium | `app/src/explain.ts` (`validateOutput`) | a temporary probe test called `validateOutput` with such texts and got them back instead of `null`; then three tests `V2 F2: …` with a fake adapter failed before the fix (`Tests  3 failed, 32 passed (35)` in Vitest's summary line) and pass after it (§8.1). The reviewer listed this as hypothesis 4 ("numbers written as words"); I reproduced it | confirmed | both |
+| V3 | the two-sentence limit is bypassed when there is no space after the full stop: `Room A-101 is unavailable.It overlaps.Sorry.` (three sentences) passes | correctness | low | `app/src/explain.ts` (`countSentences`) | the same probe test: `validateOutput` returned the text; `countSentences` splits only on `[.!?]` followed by whitespace | confirmed | me |
+| V4 | the output check cannot see invented people or a contradiction phrased without its keywords: `… because Professor Smith booked it.` passes for an unavailable request, and `Is Room A-101 available? It is booked by someone else.` passes for an **available** one | correctness | medium | `app/src/explain.ts` (`validateOutput`) | the same probe test returned both texts unchanged (not `null`). The mock never writes such text, so the page is not affected today; a real model could | confirmed | me |
+| V5 | after Check, editing the times without pressing Check again leaves the old status and the old explanation on screen | correctness | low | `app/src/App.tsx` | on the page (headless Edge script): checked 11:00–12:00 → *Available*, explained, then set 10:30–11:30 without Check: the status still said *Available* and Explain still said "available from 11:00 to 12:00" while the form showed an overlapping slot. `setResult` is only called in `check()` | confirmed | reviewer |
+| V6 | the new `checkRequestWithReason` (used by the page) has no test | tests | low | `app/src/booking.ts` | `grep checkRequestWithReason src/*.test.ts`: no match. The reviewer's other half of this finding, that nothing tests that `canBook` and `availabilityReason` agree, is not true: E1–E5 assert both `isAvailable` and `reasonCode` for five requests | confirmed | reviewer |
+| V7 | "`validateInput` also rejects … extra fields" (reviewer, finding 3) | tests | low | `app/src/explain.ts` (`validateInput`) | probe test with `extra` and `isAdmin` fields: `validateInput` returned `ok: true` and a clean copy of the five fields, and `explainAvailability` gave `generated`. Extra fields are dropped, not rejected; the claim does not match the code | unsupported | reviewer |
+| V8 | the `aria-live` region is inside the section that only appears after Check, and the status line has no live region, so a screen reader may not announce them (AC6) | maintainability | low | `app/src/App.tsx` | read lines 81–110: the `aria-live="polite"` div is rendered inside `{checked && …}`. I have no screen reader to show that an announcement is actually missed | plausible | reviewer |
+| V9 | after a timeout the adapter is not stopped; one that ignores the `AbortSignal` keeps running | performance | low | `app/src/explain.ts` (`explainAvailability`) | read the code: the signal is aborted and the timer cleared; E8 passes in 50 ms. The mock answers at once and there is no real adapter, so I could not show any leaked work | plausible | reviewer |
 
 ### 7.4 My own inspection, and the linter
 
@@ -513,37 +596,150 @@ caught and which it could not:
 
 <!-- Write below this line -->
 
+**What I checked by hand that the reviewer did not.** The reviewer did not run the page ("I did not run the UI in a browser"). I ran it in headless Edge and checked that the decision never changes in 8 runs (§6.1 UI row), and that the status goes stale when the form is edited without Check (V5). It also did not test its own claims about the output check: it called them a hypothesis. I wrote a throw-away probe test that fed `validateOutput` hostile texts, and that turned its hypothesis 4 into a confirmed V2 and found V3 and V4, which it did not mention. I also tested its claim about extra fields (V7, unsupported) and checked its "no test that canBook and availabilityReason agree" against E1–E5 (half true, V6). I checked that the build failed at the checkpoint already (§2.1), which it said it had not verified. I checked the safety claims myself as well: `grep` for `fetch`, `VITE_`, `openai`, `anthropic` and `sk-` in `src/` found nothing, and the checker's X4 and X5 pass.
+
+**The linter.** The project has no `npm run lint` (§2.1). ESLint with `typescript-eslint` would have caught **V1**: the duplicate import is a `no-redeclare` / `import/no-duplicates` error, and `tsc` already reports it. It would also flag the unused `test` import that I removed. It could not catch **V2, V3 or V4**: those are wrong *behaviour* of valid code against a contract (F2) that only a test with hostile input shows. Nor could it catch **V5**, which is a UI-state problem that shows only on the page, or tell that **V7** is a false claim. `eslint-plugin-jsx-a11y` might warn about some accessibility patterns, but not about a live region that is rendered conditionally (V8). Rule-based review finds the shape of the code; the contextual problems here needed the contract, a test or the page.
+
 ---
 
 ## 8. Task 7 — repair and regression-test
 
 ### 8.1 The first fix
 
-**Finding:** V?
+**Finding:** V2
 
-**Why it is necessary:**
+**Why it is necessary:** F2 and the contract in §3.2 say that the explanation "names no time the request does not contain". The check only recognised `HH:MM`, `11am` and similar forms, so a real model's "booked until 11 o'clock" or "booked 10-11" would be shown under the *generated* label as if it were a fact. That is exactly the invented booking detail the output check exists to stop. The fix is safe-fail: an answer it now rejects gets the deterministic fallback, never a different status.
 
-**What I rejected from the assistant's proposal, and why:**
+**What I rejected from the assistant's proposal, and why:** The reviewer's recommendation for this finding was "no change needed now", plus logging `invalid_output` causes later. I rejected that, because three tests show that the contract is broken today. I did not take its other idea of a "smaller set of required phrases" either: that is a rewrite of `validateOutput` and not a focused fix. The fix is one rule. After the known times (the request's `start` and `end`) and the rule's own `120` are removed, any digit left means the text names something the request does not contain. A test that the mock still passes for all six reason codes guards against rejecting good output.
 
 The diff (`git diff`):
 
 ```text
-(paste here)
+diff --git a/week-11/app/src/explain.test.ts b/week-11/app/src/explain.test.ts
+index 5ea4042..78ab1b1 100644
+--- a/week-11/app/src/explain.test.ts
++++ b/week-11/app/src/explain.test.ts
+@@ -123,3 +123,32 @@ describe('Week 11: explain availability, E1-E9', () => {
+     expect(out.kind).toBe('fallback');
+   });
+ });
++
++describe('Week 11: regression tests named after a review finding', () => {
++  async function expectFallback(text: string) {
++    const inventor: ExplainAdapter = async () => ({ explanation: text });
++    const input = decide('10:30', '11:30');
++    const out = await explainAvailability(input, inventor, 2000);
++    expect(out).toEqual({ kind: 'fallback', explanation: fallbackExplanation(input), cause: 'invalid_output' });
++  }
++
++  test("V2 F2: an answer naming 11 o'clock, a time the request does not contain, is replaced by the fallback", async () => {
++    await expectFallback("Room A-101 is unavailable because a booking runs until 11 o'clock.");
++  });
++
++  test('V2 F2: an answer naming a bare-hour range 10-11 is replaced by the fallback', async () => {
++    await expectFallback('Room A-101 is not available, it is booked 10-11.');
++  });
++
++  test('V2 F2: an answer inventing a duration and a start hour is replaced by the fallback', async () => {
++    await expectFallback('Room A-101 is unavailable because it is booked for 2 hours from 10.');
++  });
++
++  test('V2 F2: the mock still passes the output check for all six reason codes', async () => {
++    for (const [start, end, blocked] of [['11:00', '12:00', false], ['10:30', '11:30', false], ['11:00', '12:00', true],
++      ['12:30', '12:00', false], ['08:00', '08:30', false], ['11:00', '13:30', false]] as const) {
++      const out = await explainAvailability(decide(start, end, blocked), mockAdapter, 2000);
++      expect(out.kind).toBe('generated');
++    }
++  });
++});
+diff --git a/week-11/app/src/explain.ts b/week-11/app/src/explain.ts
+index f3322e0..6122166 100644
+--- a/week-11/app/src/explain.ts
++++ b/week-11/app/src/explain.ts
+@@ -148,11 +148,15 @@ export function validateOutput(raw: unknown, input: ExplainInput): string | null
+     return null;
+   }
+ 
+-  // Names no time the request does not contain.
++  // Names no time and no number the request does not contain (F2).
+   const allowed = new Set([input.start, input.end]);
+   if (input.start === '00:00' || input.end === '24:00' || input.start === '24:00') allowed.add('midnight');
+   if (input.end === '24:00') allowed.add('00:00');
+   if (timesIn(body).some(t => !allowed.has(t))) return null;
++  // Any other number ("11 o'clock", "10-11", "2 hours") is a detail the request does not contain.
++  // Only the request's own times and the 120-minute rule may appear as digits.
++  const withoutKnown = [input.start, input.end, '120'].reduce((s, known) => s.split(known).join(' '), body);
++  if (/\d/.test(withoutKnown)) return null;
+ 
+   return explanation;
+ }
 ```
 
 ### 8.2 The second fix
 
-**Finding:** V?
+**Finding:** V1
 
-**Why it is necessary:**
+**Why it is necessary:** AGENTS.md says `npm test` **and** `npm run build` must both pass before a change is proposed for acceptance, and the build has failed since Week 10 (R4). Without it there is no production bundle to demonstrate, and `tsc` would hide any new type error in the feature behind the same six old errors.
 
-**What I rejected from the assistant's proposal, and why:**
+**What I rejected from the assistant's proposal, and why:** The reviewer proposed to delete the import on **line 1**. I deleted **line 3** instead. Line 3 also imports `test`, which this file never uses. Keeping line 1 leaves the imports as they were before the duplicate was pasted in, with no unused name. No test, assertion or fixture was touched, so the 20 booking tests are all still there (S1 passes).
 
 The diff (`git diff`):
 
 ```text
-(paste here)
+diff --git a/week-11/app/src/booking.test.ts b/week-11/app/src/booking.test.ts
+index fd3e229..b0f643c 100644
+--- a/week-11/app/src/booking.test.ts
++++ b/week-11/app/src/booking.test.ts
+@@ -1,6 +1,5 @@
+ import { describe, it, expect } from 'vitest';
+ import { canBook, checkRequest } from './booking';
+-import { describe, it, test, expect } from 'vitest';
+ describe('canBook - First Suite', () => {
+   const defaultFixture = {
+     now: 540,
 ```
+
+The code change only removes a line, so here is also what it changes in the build. This is a diff of the two `npm run build` outputs, before (the §2.1 run at the checkpoint 0fafea2; `booking.test.ts` was unchanged up to c61e425) and after (at c759bc8), not of code:
+
+```text
+--- npm run build, before the fix (exit 2)
++++ npm run build, after the fix (exit 0)
+-src/booking.test.ts(1,10): error TS2300: Duplicate identifier 'describe'.
+-src/booking.test.ts(1,20): error TS2300: Duplicate identifier 'it'.
+-src/booking.test.ts(1,24): error TS2300: Duplicate identifier 'expect'.
+-src/booking.test.ts(3,10): error TS2300: Duplicate identifier 'describe'.
+-src/booking.test.ts(3,20): error TS2300: Duplicate identifier 'it'.
+-src/booking.test.ts(3,30): error TS2300: Duplicate identifier 'expect'.
++vite v5.4.21 building for production...
++transforming...
++✓ 33 modules transformed.
++rendering chunks...
++computing gzip size...
++dist/index.html                   0.43 kB │ gzip:  0.29 kB
++dist/assets/index-V0f3cti0.css    1.28 kB │ gzip:  0.53 kB
++dist/assets/index-DoXr67UK.js   151.72 kB │ gzip: 49.05 kB
++✓ built in 611ms
+```
+
+After the fix (at c759bc8):
+
+```text
+$ npm run build
+> smart-campus-availability@0.0.0 build
+> tsc && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 33 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.43 kB │ gzip:  0.29 kB
+dist/assets/index-V0f3cti0.css    1.28 kB │ gzip:  0.53 kB
+dist/assets/index-DoXr67UK.js   151.72 kB │ gzip: 49.05 kB
+✓ built in 611ms
+```
+
+(`dist/` was deleted afterwards and is not committed.)
 
 ### 8.3 The final run
 
@@ -551,16 +747,35 @@ The real output of the **full** suite after both fixes: the old booking tests an
 together. Every test must pass.
 
 ```text
-(paste here)
+$ npx vitest run
+ RUN  v2.1.9 C:/Users/alyok/se-practice/week-11/app
+
+ ✓ src/booking.test.ts (20 tests) 7ms
+ ✓ src/explain.test.ts (15 tests) 63ms
+
+ Test Files  2 passed (2)
+      Tests  35 passed (35)
+   Start at  21:10:39
+   Duration  569ms (transform 85ms, setup 0ms, collect 127ms, tests 70ms, environment 0ms, prepare 253ms)
 ```
 
 ### 8.4 Ready for demonstration?
 
-**Ready:** yes / no
+**Ready:** yes
 
 **What remains unresolved:**
 
 <!-- Write below this line -->
+
+Ready for a **demonstration with the mock adapter**: 35 of 35 tests pass, `npm run build` passes, and the page shows the decision, the generated label and the fallback (§6.3). It is **not** ready for a real model. These stay open:
+- **V4**: `validateOutput` is a set of regular expressions. It cannot see an invented person, and it can be fooled by a contradiction without its keywords. Before a real model is connected, the output check needs a stricter design: for example, the model only chooses among fixed templates per reason code, or the check requires the sentence to match the reason code.
+- **V3**: the sentence counter needs to split on `.` without a following space.
+- **V5**: the page should clear the status and the explanation when an input changes.
+- **V6**: `checkRequestWithReason` needs a test.
+- **V8**: the live region should always be rendered.
+- **V9**: a future server adapter must honour the `AbortSignal`.
+- There is still no lint script (§2.1).
+- The UI checks were done by a script in headless Edge and by eye, not by a component test.
 
 ---
 
@@ -570,7 +785,7 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
 
 | Check | Why it stays |
 | --- | --- |
-| | |
+| none | The run is clean (27 PASS). I ran the checker on a clean export of the committed tree (`git archive HEAD week-11`), which is what the grader gets. In my own working folder B2 says FAIL only because of `app/node_modules/`, which `npm install` created and which is untracked and never committed. |
 
 ---
 
@@ -585,3 +800,5 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
      because the timeout was never armed; V1 was confirmed by a test that failed before the fix." -->
 
 <!-- Write your reflection below this line -->
+
+Claude Code (Opus 5.5) wrote availabilityReason, explain.ts with the mock adapter, and the button. I kept its structure, but I changed the timeout to the 2000 ms I had fixed in §3.3, and I did not let it edit the booking test file during the build. My tests E1–E9 pass. E8 uses an adapter that never answers, and it falls back after 50 ms. The Sonnet reviewer called the output check safe and only guessed that invented times could pass. A probe test showed that "11 o'clock" and "10-11" did pass, so V2 was confirmed by three tests that failed before the fix. V1, the duplicate import, finally made npm run build pass. Its claim that extra input fields are rejected (V7) was unsupported. V4 is still open: a regex cannot spot an invented person.
