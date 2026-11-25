@@ -18,6 +18,9 @@ call and no browser storage. All data is fictional and lives in `src/rooms.ts`.
 | `src/booking.ts` | `canBook` (the five booking rules) and `checkRoom` (one room from the catalog) | yes |
 | `src/filter.ts` | `filterRooms` — capacity (F1) and *all* selected equipment (F2) | yes |
 | `src/time.ts` | `toMinutes`, `fmt`, `END_OF_DAY` — `HH:MM` ⇄ minutes after midnight | no — formatting only |
+| `src/form.ts` | `toAttendees`, `toRequest` — the Adapter from the form's strings to the rules' numbers, and the form messages | input checks only, no availability rule |
+| `src/node-child-process.d.ts` | the one Node signature the R1 test needs (`@types/node` is not installed) | no |
+| `.gitignore` | keeps `node_modules/`, `dist/` and `.env*` out of git (checked by `src/gitignore.test.ts`, which needs `git`) | — |
 | `src/App.tsx` | page state and wiring; calls the functions above | no |
 | `src/components/` | `RoomFilter`, `RoomList`, `ResultMessage` — presentation only | no |
 | `src/*.test.ts` | Vitest tests on the real modules (no mocks) | — |
