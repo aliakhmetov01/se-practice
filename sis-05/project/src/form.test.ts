@@ -30,4 +30,14 @@ describe('form adapter - page fields to rule inputs', () => {
     expect(toAttendees('12')).toBe(12);
     expect(toAttendees('')).toBe(0);
   });
+
+  it('R2 attendees -5, 0, 2.5 and "abc" are refused (null), never turned into a filter', () => {
+    for (const value of ['-5', '0', '2.5', 'abc']) {
+      expect(toAttendees(value), `toAttendees('${value}')`).toBeNull();
+    }
+  });
+
+  it('R2 whole numbers of 1 or more still pass through unchanged (1, 12, 40)', () => {
+    expect(['1', '12', '40'].map(toAttendees)).toEqual([1, 12, 40]);
+  });
 });

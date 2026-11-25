@@ -3,7 +3,7 @@ import { checkRoom } from './booking';
 import { filterRooms } from './filter';
 import { DEMO_NOW, EQUIPMENT, ROOMS } from './rooms';
 import { fmt } from './time';
-import { toAttendees, toRequest, type TimeRequest } from './form';
+import { ATTENDEES_ERROR, toAttendees, toRequest, type TimeRequest } from './form';
 import { RoomFilter } from './components/RoomFilter';
 import { RoomList } from './components/RoomList';
 import { ResultMessage } from './components/ResultMessage';
@@ -19,7 +19,9 @@ export default function App() {
   const [error, setError] = useState('');
 
   // F1, F2: the list comes from filterRooms; the page adds no rule of its own.
-  const visible = filterRooms(ROOMS, { attendees: toAttendees(attendees), equipment });
+  // R2: an invalid attendees value lists no rooms and says why, instead of listing every room.
+  const people = toAttendees(attendees);
+  const visible = people === null ? [] : filterRooms(ROOMS, { attendees: people, equipment });
   // A room hidden by the filter is no longer selected, so no result is shown for it.
   const selected = visible.find(r => r.id === roomId) ?? null;
   // F3, F5: recomputed on every render for the selected room with the last submitted times.
@@ -61,6 +63,7 @@ export default function App() {
         selected={equipment}
         onToggle={toggle}
       />
+      {people === null && <p className="error" role="alert">{ATTENDEES_ERROR}</p>}
 
       <h2>Rooms ({visible.length} of {ROOMS.length})</h2>
       <RoomList rooms={visible} selectedId={selected?.id ?? ''} onSelect={setRoomId} />

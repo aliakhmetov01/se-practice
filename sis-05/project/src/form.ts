@@ -16,9 +16,17 @@ export type TimeRequest = { start: number; end: number };
 
 export type FormResult = { request: TimeRequest } | { error: string };
 
-/** F1: the attendees field as the number filterRooms expects; an empty field counts as 0. */
-export function toAttendees(value: string): number {
-  return Number(value) || 0;
+/** Shown instead of the room list when the attendees field is not a valid number (R2). */
+export const ATTENDEES_ERROR = 'Attendees must be a whole number, 1 or more.';
+
+/**
+ * F1: the attendees field as the number filterRooms expects; an empty field counts as 0 (no capacity
+ * requirement yet). R2: anything that is not a whole number of at least 1 gives null, never a filter.
+ */
+export function toAttendees(value: string): number | null {
+  if (value.trim() === '') return 0;
+  const count = Number(value);
+  return Number.isInteger(count) && count >= 1 ? count : null;
 }
 
 /** The submitted times as minutes, or the message the page shows instead of a result. */
