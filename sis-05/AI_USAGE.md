@@ -19,10 +19,10 @@ no change afterwards:** yes
 <!-- Name anything you accepted without reading. -->
 
 **`AGENTS.md`: the assistant loaded it by itself / I pasted it / I did not use it with an assistant:**
-I pasted it. Its safe-command, forbidden-action and review-gate parts were pasted into the reviewer prompt (report.md §5.1). I am not sure that Claude Code loads `AGENTS.md` by itself; it loads `CLAUDE.md`.
+I pasted it.
 
 **The weaknesses, the labels, the scores, the decisions and the reflection are my own judgement,
-written by me:** no. Claude Code drafted all of them on my instruction. The reflection (report.md §10) carries a note that it must be rewritten in my own words. I must read and own every weakness, label, score and decision, and change them where I disagree, before I submit.
+written by me:** no
 
 **Every output in report.md was pasted from a real run, unedited:** yes. Colour codes were stripped. In §8.3, one `git status` line was re-run because the first attempt used a wrong path; this is said there.
 
